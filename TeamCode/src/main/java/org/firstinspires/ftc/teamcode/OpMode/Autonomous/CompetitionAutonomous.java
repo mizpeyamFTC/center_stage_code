@@ -75,9 +75,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
         waitForStart();
         initializeRobot();
         runAutonomous();
-
-
-
     }
     private void runAutonomous(){
 
