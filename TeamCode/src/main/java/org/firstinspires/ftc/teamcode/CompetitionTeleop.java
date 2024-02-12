@@ -1,82 +1,90 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Size;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp(name="TeleOp1", group="Linear Opmode")
+@TeleOp(name = "CompetitionTeleop")
+public class CompetitionTeleop extends LinearOpMode {
 
-public class TeleOp1 extends LinearOpMode {
-
-    private ElapsedTime runtime = new ElapsedTime();
-
-    private DcMotor leftFront, leftRear, rightFront, rightRear, intakeMotor, liftMotor;
-    private  DcMotor firstArmJoint, middleArmJoint;
+    private DcMotor leftFront, leftRear, rightFront, rightRear;
+    private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
     private Servo clawServo;
-    //finalArmJoint, clawServo;
-    private double LF, LR, RF, RR;
-    private double leftX, leftY, rightX, rightY;
-    double motorMax = 0.5;
-    double intakePow, liftPow = 0.2;
-    IMU imu;
-    boolean isFinal = true;
-    AprilTagProcessor tagProcessor;
-    VisionPortal visionPortal;
-    private final double CORE_HEX_COUNTS_PER_REVOLUTION = 288;
-    private final double CORE_HEX_DEGREES_PER_COUNT = 360/CORE_HEX_COUNTS_PER_REVOLUTION;
+    private DistanceSensor distanceSensor;
+    private ColorSensor colorSensor;
+    private IMU controlHubIMU;
 
-    private final double HOME_TO_INTAKE_DEGREES = 20;
+    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+    private double DIST_NORM, SIDE_DIST_NORM, WHEEL_DIAMETER_CM, WHEEL_BASE_DISTANCE, FULL_ROUND;
+    private double COUNTS_PER_CM;
 
+    private ElapsedTime runtime;
+    private ElapsedTime matchRuntime;
+
+    private double motorMax = 0.5;
+
+    private final double driveMax = 0.9;
+    private final double turnMax = 0.5;
+
+
+    private final long SHORT_SIDE_WAIT = 10000;
+
+    private int newLeftFrontTarget;
+    private int newRightFrontTarget;
+    private int newLeftRearTarget;
+    private int newRightRearTarget;
+    private int sleepTime = 30;
+    private double targetHeading = 0;
+    private double headingError = 0;
+    private double turnSpeed= 0.6;
     private int intakeMotorPositionCount;
     private int middleArmJointHomePosition;
-    private boolean firstArmDeployment = false;
+
+    private final double CORE_HEX_COUNTS_PER_REVOLUTION = 288;
+    private final double CORE_HEX_DEGREES_PER_COUNT = 360/CORE_HEX_COUNTS_PER_REVOLUTION;
+    private final double COUNTS_PER_MOTOR_REV = 28;    //כמות צעדים עבור סיבוב מנוע
+    private final double DRIVE_GEAR_REDUCTION = 20.0;     // יחס גירים
+    private final double GOB_WHEEL_DIAMETER_CM = 9.6;     // For figuring circumference
+    private final double REV_WHEEL_DIAMETER_CM = 7.5;     // For figuring circumference
+    private final double GOB_WHEEL_BASE_DISTANCE = 39;     // For figuring circumference
+    private final double REV_WHEEL_BASE_DISTANCE = 37;     // For figuring circumference
+    private final double TURN_SPEED= 0.3;
+    private final double MIN_TURN_SPEED = 0.2;
+    private final double HEADING_THRESHOLD= 0.5 ;    // How close must the heading get to the target before moving to next step.
+    private final double P_DRIVE_GAIN= 0.03;     // Larger is more responsive, but also less stable
+    // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
+    // Define the Proportional control coefficient (or GAIN) for "heading control".
+    // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
+    // Increase these numbers if the heading does not corrects strongly enough (eg: a heavy robot or using tracks)
+    // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
+    private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
+    private final int COLOR_THRESHOLD = 400; // blue
+
+
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
+        waitForStart();
+        initializeRobot();
 
-
-        initRobot();
-        // Declare our motors
-        // Make sure your ID's match your configuration
-
-
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
-
-
-        if (isStopRequested()) return;
-        // run until the end of the match (driver presses STOP)
-        if(opModeIsActive()){
-            fieldOrientedWhile();
-        }
-
-    }
-
-
-
-
-    private void fieldOrientedWhile(){
         double denominator, frontLeftPower, backLeftPower, frontRightPower, backRightPower;
         double rotX, rotY;
         double botHeading;
         double gp2LeftStickY, gp2LeftStickX, gp2RightStickY, gp2RightStickX;
         double y, x,rx;
-        while (opModeIsActive()) {
-            updateTelemetryRunTime();
+        double maxOutputPower;
+
+        while(opModeIsActive()){
 
             //********************* EXTRACT TO updateTelemetry
             updateTelemetry();
@@ -93,9 +101,7 @@ public class TeleOp1 extends LinearOpMode {
 
             motorMax = 0.7+gamepad1.right_trigger/10*3;
 
-
-            botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
+            botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             telemetryAddIMUData();
             // Rotate the movement direction counter to the bot's rotation
             rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
@@ -106,10 +112,11 @@ public class TeleOp1 extends LinearOpMode {
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
             denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            frontLeftPower = motorMax* (rotY + rotX + rx) / denominator;
-            backLeftPower = motorMax*(rotY - rotX + rx) / denominator;
-            frontRightPower = motorMax*(rotY - rotX - rx) / denominator;
-            backRightPower = motorMax*(rotY + rotX - rx) / denominator;
+            maxOutputPower = motorMax / denominator;
+            frontLeftPower =maxOutputPower* (rotY + rotX + rx);
+            backLeftPower = maxOutputPower*(rotY - rotX + rx);
+            frontRightPower = maxOutputPower*(rotY - rotX - rx);
+            backRightPower = maxOutputPower*(rotY + rotX - rx);
 
             powerDriveMotors(frontLeftPower, backLeftPower, frontRightPower, backRightPower);
 
@@ -141,41 +148,54 @@ public class TeleOp1 extends LinearOpMode {
             if(gamepad2.dpad_left) centerOnLeftAprilTag();//optional
             if(gamepad2.dpad_up) centerOnMiddleAprilTag();//optional
             if(gamepad2.dpad_right) centerOnRightAprilTag();//optional
-            if(gamepad1.a) resetIMU();//optional
+            if(gamepad1.a) resetIMU();
+
 
 
             finalArmJoint.setPower(gp2LeftStickY*0.8);
             middleArmJoint.setPower(gp2RightStickY*0.8);
 
-          /*
-            if(gamepad2.right_trigger > 0.5) {
-                //liftMotor.setPower(liftPow);
-                int liftPosition;
-                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftPosition = liftMotor.getCurrentPosition();
-                liftMotor.setTargetPosition(liftPosition+200);
-            }
-            if(gamepad2.left_trigger > 0.5) {
-                //liftMotor.setPower(-liftPow);
-                int liftPosition;
-                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftPosition = liftMotor.getCurrentPosition();
-                liftMotor.setTargetPosition(liftPosition-200);
-            }
-            if(gamepad1.a){
-                int aprilTagId =4;
-                int distanceCM =10;
-                RunToId(aprilTagId, distanceCM);
-            }
 
-           */
+
+
 
         }
 
+
+
+    }
+
+    private void updateTelemetry() {
+        /*
+        telemetry.addData("LF", "%.3f", LF);
+        telemetry.addData("RF", "%.3f", RF);
+        telemetry.addData("LR", "%.3f", LR);
+        telemetry.addData("RR", "%.3f", RR);
+        telemetry.addData("LEFT Y", "%.3f", leftY);
+        telemetry.addData("LEFT X", "%.3f", leftX);
+        telemetry.addData("RIGHT Y", "%.3f", rightY);
+        telemetry.addData("RIGHT X", "%.3f", rightX);
+        telemetry.addData("LIFT", "%.3f", liftPow);
+
+         */
+
+        /*if(tagProcessor.getDetections().size()>0){
+            AprilTagDetection tag = tagProcessor.getDetections().get(0);
+            telemetry.addData("x",tag.ftcPose.x);
+            telemetry.addData("y",tag.ftcPose.y);
+            telemetry.addData("z",tag.ftcPose.z);
+            telemetry.addData("roll",tag.ftcPose.roll);
+            telemetry.addData("pitch",tag.ftcPose.pitch);
+            //telemetry.addData("yaw",tag.ftcPose.yaw);
+            telemetry.addData("tag id:",tag.id);
+            telemetry.update();
+        }
+
+         */
+
     }
     private void resetIMU(){
-        imu.resetYaw();
-
+        initIMU();
     }
 
     private void powerDriveMotors(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower) {
@@ -184,21 +204,10 @@ public class TeleOp1 extends LinearOpMode {
         rightFront.setPower(frontRightPower);
         rightRear.setPower(backRightPower);
     }
-
-    private void initRobot() {
-
-        initTelemetry();
-        initMotors();
-        initIMU();
-        //initCamera();
-        waitForStart();
-        runtime.reset();
-    }
-
     private void telemetryAddIMUData() {
-        telemetry.addData("yaw:",imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) );
-        telemetry.addData("pitch:",imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES) );
-        telemetry.addData("roll:",imu.getRobotYawPitchRollAngles().getRoll(AngleUnit.DEGREES) );
+        telemetry.addData("yaw:", controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) );
+        telemetry.addData("pitch:", controlHubIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES) );
+        telemetry.addData("roll:", controlHubIMU.getRobotYawPitchRollAngles().getRoll(AngleUnit.DEGREES) );
         telemetry.update();
     }
 
@@ -268,98 +277,56 @@ public class TeleOp1 extends LinearOpMode {
     private void openClaw() {
         clawServo.setPosition(1);
     }
+    //************************* - INITIALIZE - *************************
+    private void initializeRobot() {
 
-
-    private void RunToId(int aprilTagId, int distanceCM) {
-
-
+        initRobotParameters();
+        initMotors();
+        initIMU();
 
     }
-
-    private void powerMotors() {
-        leftFront.setPower(LF);
-        rightFront.setPower(RF);
-        leftRear.setPower(LR);
-        rightRear.setPower(RR);
-        //intakeMotor.setPower(intakePow);
-        liftMotor.setPower(liftPow);
-    }
-
-    private void updateTelemetry() {
-        telemetry.addData("LF", "%.3f", LF);
-        telemetry.addData("RF", "%.3f", RF);
-        telemetry.addData("LR", "%.3f", LR);
-        telemetry.addData("RR", "%.3f", RR);
-        telemetry.addData("LEFT Y", "%.3f", leftY);
-        telemetry.addData("LEFT X", "%.3f", leftX);
-        telemetry.addData("RIGHT Y", "%.3f", rightY);
-        telemetry.addData("RIGHT X", "%.3f", rightX);
-        telemetry.addData("LIFT", "%.3f", liftPow);
-
-        /*if(tagProcessor.getDetections().size()>0){
-            AprilTagDetection tag = tagProcessor.getDetections().get(0);
-            telemetry.addData("x",tag.ftcPose.x);
-            telemetry.addData("y",tag.ftcPose.y);
-            telemetry.addData("z",tag.ftcPose.z);
-            telemetry.addData("roll",tag.ftcPose.roll);
-            telemetry.addData("pitch",tag.ftcPose.pitch);
-            //telemetry.addData("yaw",tag.ftcPose.yaw);
-            telemetry.addData("tag id:",tag.id);
-            telemetry.update();
+    private void initRobotParameters() {
+        runtime = new ElapsedTime();
+        matchRuntime = new ElapsedTime();
+        boolean bLedOn = true;
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
+        colorSensor = hardwareMap.get(ColorSensor.class, "cs-1");
+        colorSensor.enableLed(bLedOn);
+        if (MAIN_ROBOT) {
+            WHEEL_DIAMETER_CM = GOB_WHEEL_DIAMETER_CM;
+            WHEEL_BASE_DISTANCE = GOB_WHEEL_BASE_DISTANCE;
+            DIST_NORM = 1;
+            SIDE_DIST_NORM = 1.15;
         }
+        else {
+            WHEEL_DIAMETER_CM =REV_WHEEL_DIAMETER_CM;
+            WHEEL_BASE_DISTANCE = REV_WHEEL_BASE_DISTANCE;
+            DIST_NORM = 0.9;
+            SIDE_DIST_NORM =0.9;
 
-         */
-
+        }
+        COUNTS_PER_CM = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+                (WHEEL_DIAMETER_CM * 3.1415);
+        FULL_ROUND = COUNTS_PER_MOTOR_REV*DRIVE_GEAR_REDUCTION*(WHEEL_BASE_DISTANCE/WHEEL_DIAMETER_CM)*1.65;
     }
-    private void addDataToTelemetry(String caption, String format, String data ){
-        telemetry.addData(caption, format, data);
-        telemetry.update();
-    }
-
-    private void updateTelemetryRunTime() {
-        telemetry.addData("Status", "Run Timed: " + runtime.toString());
-        telemetry.update();
-    }
-
-
-
-
     private void initIMU() {
         // Retrieve the IMU from the hardware map
-        imu = hardwareMap.get(IMU.class, "imu");
+        controlHubIMU = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
-        imu.initialize(parameters);
-    }
-
-    private void initCamera(){
-        tagProcessor = new AprilTagProcessor.Builder()
-                .setDrawAxes(true)
-                .setDrawCubeProjection(true)
-                .setDrawTagID(true)
-                .setDrawTagOutline(true)
-                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                .build();
-        visionPortal = new VisionPortal.Builder()
-                .addProcessor(tagProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .setCameraResolution(new Size(640, 480))
-                .build();
-    }
-    private void initTelemetry() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-    }
+        controlHubIMU.initialize(parameters);
+        controlHubIMU.resetYaw();
 
 
+    }
     private void initMotors(){
         assignHardwareToMotors();
 
         //intakeMotor = hardwareMap.dcMotor.get("intake");
-       // liftMotor = hardwareMap.dcMotor.get("lift");
+        // liftMotor = hardwareMap.dcMotor.get("lift");
 
         initMotorsDirection();
 
@@ -368,45 +335,42 @@ public class TeleOp1 extends LinearOpMode {
         setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        firstArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
 
     }
-
     private void assignHardwareToMotors() {
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightFront = hardwareMap.dcMotor.get("rightFront");
         leftRear = hardwareMap.dcMotor.get("leftRear");
         rightRear = hardwareMap.dcMotor.get("rightRear");
-        firstArmJoint = hardwareMap.get(DcMotor.class, "firstArmJoint");
         middleArmJoint = hardwareMap.get(DcMotor.class, "middleArmJoint");
         finalArmJoint = hardwareMap.get(CRServo.class,"finalArmJoint" );
         clawServo = hardwareMap.get(Servo.class,"clawServo" );
-    }
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
 
+    }
     private void resetAllMotorsEncoders() {
         setAllMotorsMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
-
     private void setAllMotorsMode(DcMotor.RunMode runMode) {
         leftFront.setMode(runMode);
         rightFront.setMode(runMode);
         leftRear.setMode(runMode);
         rightRear.setMode(runMode);
-        firstArmJoint.setMode(runMode);
         middleArmJoint.setMode(runMode);
     }
-
-
-
     private void initMotorsDirection() {
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
-        firstArmJoint.setDirection(DcMotor.Direction.FORWARD);
         middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
         finalArmJoint.setDirection(CRServo.Direction.REVERSE);
     }
-
+    private void turnOnRunToPosition() {
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+    //*************************INITIALIZE*************************
 }

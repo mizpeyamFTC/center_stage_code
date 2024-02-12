@@ -24,26 +24,17 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private CRServo finalArmJoint;
     private Servo clawServo;
     private DistanceSensor distanceSensor;
-    ColorSensor colorSensor;
-    private int COLOR_THRESHOLD = 400; // blue
-    IMU imu;
-    IMU.Parameters myIMUparameters;
-    private double DIST_NORM, SIDE_DIST_NORM;
-    static boolean MAIN_ROBOT = true; // false for ROBOT_B
-    private static double WHEEL_DIAMETER_CM;
-    double WHEEL_BASE_DISTANCE;
-    double FULL_ROUND;
-    double COUNTS_PER_CM;
-    static final double COUNTS_PER_MOTOR_REV = 28;    //כמות צעדים עבור סיבוב מנוע
-    static final double DRIVE_GEAR_REDUCTION = 20.0;     // יחס גירים
-    static final double GOB_WHEEL_DIAMETER_CM = 9.6;     // For figuring circumference
-    static final double REV_WHEEL_DIAMETER_CM = 7.5;     // For figuring circumference
-    static final double GOB_WHEEL_BASE_DISTANCE = 39;     // For figuring circumference
-    static final double REV_WHEEL_BASE_DISTANCE = 37;     // For figuring circumference
-    private ElapsedTime runtime = new ElapsedTime();
-    private ElapsedTime matchRuntime = new ElapsedTime();
+    private ColorSensor colorSensor;
+    private IMU imu;
+    private IMU.Parameters myIMUparameters;
+    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+    private double DIST_NORM, SIDE_DIST_NORM, WHEEL_DIAMETER_CM, WHEEL_BASE_DISTANCE, FULL_ROUND;
+    private double COUNTS_PER_CM;
 
-    double motorMax = 0.5;
+    private ElapsedTime runtime;
+    private ElapsedTime matchRuntime;
+
+    private double motorMax = 0.5;
 
     private final double driveMax = 0.9;
     private final double turnMax = 0.5;
@@ -55,25 +46,28 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private int newRightFrontTarget;
     private int newLeftRearTarget;
     private int newRightRearTarget;
-    int sleepTime = 30;
-    private double  targetHeading = 0;
-    private double  headingError  = 0;
-    static final double     TURN_SPEED              = 0.3;
-    static final double MIN_TURN_SPEED = 0.2;
-    static final double     HEADING_THRESHOLD       = 0.5 ;    // How close must the heading get to the target before moving to next step.
-    static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable
+    private int sleepTime = 30;
+    private double targetHeading = 0;
+    private double headingError = 0;
+    private double turnSpeed= 0.6;
+
+    private final double COUNTS_PER_MOTOR_REV = 28;    //כמות צעדים עבור סיבוב מנוע
+    private final double DRIVE_GEAR_REDUCTION = 20.0;     // יחס גירים
+    private final double GOB_WHEEL_DIAMETER_CM = 9.6;     // For figuring circumference
+    private final double REV_WHEEL_DIAMETER_CM = 7.5;     // For figuring circumference
+    private final double GOB_WHEEL_BASE_DISTANCE = 39;     // For figuring circumference
+    private final double REV_WHEEL_BASE_DISTANCE = 37;     // For figuring circumference
+    private final double TURN_SPEED= 0.3;
+    private final double MIN_TURN_SPEED = 0.2;
+    private final double HEADING_THRESHOLD= 0.5 ;    // How close must the heading get to the target before moving to next step.
+    private final double P_DRIVE_GAIN= 0.03;     // Larger is more responsive, but also less stable
     // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not corrects strongly enough (eg: a heavy robot or using tracks)
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
-    static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable
-    private double  turnSpeed     = 0.6;
-
-
-
-
-
+    private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
+    private final int COLOR_THRESHOLD = 400; // blue
 
 
     @Override
@@ -85,7 +79,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
 
     }
-    public void runAutonomous(){
+    private void runAutonomous(){
         Side_Short_Corner(true);
         Side_Short_Middle(true);
         Side_Long_Gate_Middle(true);
@@ -94,6 +88,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         Side_Long_Straight_Corner(true);
     }
 
+    //************************* - AUTONOMOUS MODES - *************************
     private void Side_Short_Corner(boolean blue){
         if(blue) {
             turnToHeading(0.8, -90);
@@ -200,6 +195,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     } // finished
 
+    //************************* - AUTONOMOUS MODES - *************************
+
 
 
 
@@ -224,8 +221,9 @@ public class CompetitionAutonomous extends LinearOpMode  {
     }
     //************************* - DIRECTIONAL DRIVE - *************************
 
-    //************************* - SUPERVISED DRIVE - *************************
 
+
+    //************************* - SUPERVISED DRIVE - *************************
     private void driveDistanceByEncoder(double speed,
                                         double leftFrontCm, double rightFrontCm, double leftRearCm, double rightRearCm,
                                         double timeoutS) {
@@ -259,7 +257,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
         }
     }
-    public void moveRobot(double linearSpeed, double turnSpeed) {
+    private void moveRobot(double linearSpeed, double turnSpeed) {
         leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftRear.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -270,7 +268,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         rightFront.setPower(linearSpeed-turnSpeed);
         rightRear.setPower(linearSpeed-turnSpeed);
     } // allows a free rotation and endless movement of the robot
-    public void turnToHeading(double maxTurnSpeed, double heading) {
+    private void turnToHeading(double maxTurnSpeed, double heading) {
 
         // Run getSteeringCorrection() once to pre-calculate the current error
         getSteeringCorrection(heading, P_DRIVE_GAIN);
@@ -321,6 +319,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     //************************* - SUPERVISED DRIVE - *************************
 
 
+
     //************************* - INFORMATION AND CALCULATION - *************************
     private double getHeading() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
@@ -368,10 +367,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
     }
     //************************* - INFORMATION AND CALCULATION - *************************
 
-
-
-
-
     private void runToPosition(double speed) {
 
         runtime.reset();
@@ -412,6 +407,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     }
     private void initRobotParameters() {
+        runtime = new ElapsedTime();
+        matchRuntime = new ElapsedTime();
         boolean bLedOn = true;
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
         colorSensor = hardwareMap.get(ColorSensor.class, "cs-1");
@@ -433,6 +430,20 @@ public class CompetitionAutonomous extends LinearOpMode  {
                 (WHEEL_DIAMETER_CM * 3.1415);
         FULL_ROUND = COUNTS_PER_MOTOR_REV*DRIVE_GEAR_REDUCTION*(WHEEL_BASE_DISTANCE/WHEEL_DIAMETER_CM)*1.65;
     }
+    private void initMotors(){
+        assignHardwareToMotors();
+
+        //intakeMotor = hardwareMap.dcMotor.get("intake");
+        // liftMotor = hardwareMap.dcMotor.get("lift");
+
+        initMotorsDirection();
+
+        setAllMotorsMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+    }
     private void initIMU() {
         // Retrieve the IMU from the hardware map
         imu = hardwareMap.get(IMU.class, "imu");
@@ -444,21 +455,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
         imu.initialize(parameters);
         imu.resetYaw();
     }
-    private void initMotors(){
-        assignHardwareToMotors();
-
-        //intakeMotor = hardwareMap.dcMotor.get("intake");
-        // liftMotor = hardwareMap.dcMotor.get("lift");
-
-        initMotorsDirection();
-
-        resetAllMotorsEncoders();
-
-        setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-    }
     private void assignHardwareToMotors() {
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightFront = hardwareMap.dcMotor.get("rightFront");
@@ -469,9 +465,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
         clawServo = hardwareMap.get(Servo.class,"clawServo" );
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
 
-    }
-    private void resetAllMotorsEncoders() {
-        setAllMotorsMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
     private void setAllMotorsMode(DcMotor.RunMode runMode) {
         leftFront.setMode(runMode);
