@@ -80,12 +80,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     }
     private void runAutonomous(){
-        Side_Short_Corner(true);
-        Side_Short_Middle(true);
-        Side_Long_Gate_Middle(true);
-        Side_Long_Gate_Corner(true);
-        Side_Long_Straight_Middle(true);
-        Side_Long_Straight_Corner(true);
+
     }
 
     //************************* - AUTONOMOUS MODES - *************************
