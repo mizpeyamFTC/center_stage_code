@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpMode.Autonomous;
 
+import android.util.Size;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -12,9 +14,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @Autonomous(name= "competAuton")
 public class CompetitionAutonomous extends LinearOpMode  {
@@ -68,6 +74,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
     private final int COLOR_THRESHOLD = 400; // blue
+    AprilTagProcessor tagProcessor;
+    VisionPortal visionPortal;
 
 
     @Override
@@ -78,7 +86,10 @@ public class CompetitionAutonomous extends LinearOpMode  {
     }
     private void runAutonomous(){
 
+
+
     }
+
 
     //************************* - AUTONOMOUS MODES - *************************
     private void Side_Short_Corner(boolean blue){
@@ -188,6 +199,42 @@ public class CompetitionAutonomous extends LinearOpMode  {
     } // finished
 
     //************************* - AUTONOMOUS MODES - *************************
+
+
+     private void goToAprilTag(AprilTagDetection tag){
+        double x  = tag.ftcPose.x;
+        double y  = tag.ftcPose.y;
+        if(x>0){
+            right(0.3, x, 10000);
+        }
+        if(x<0){
+            left(0.3, -x, 10000);
+        }
+        double yaw = tag.ftcPose.yaw;
+        turnToHeading(0.3,90);
+         if(x>0){
+             right(0.3, x, 10000);
+         }
+         if(x<0){
+             left(0.3, -x, 10000);
+         }
+         forward(0.3,tag.ftcPose.y, 10000);
+
+     }
+    private void initCamera(){
+        tagProcessor = new AprilTagProcessor.Builder()
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .setDrawTagID(true)
+                .setDrawTagOutline(true)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                .build();
+        visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .build();
+    }
 
 
 
@@ -396,8 +443,10 @@ public class CompetitionAutonomous extends LinearOpMode  {
         initRobotParameters();
         initMotors();
         initIMU();
+        initCamera();
 
     }
+
     private void initRobotParameters() {
         runtime = new ElapsedTime();
         matchRuntime = new ElapsedTime();
