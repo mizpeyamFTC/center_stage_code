@@ -86,18 +86,15 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     }
     public void runAutonomous(){
-
-
-
-        //blueSide_Short_Corner(true);
-        //blueSide_Short_Middle(true);
-
-        //blueSide_Long_Gate_Middle(true);
-        blueSide_Long_Gate_Corner(true);
-        //blueSide_Long_Straight_Middle(true);
+        Side_Short_Corner(true);
+        Side_Short_Middle(true);
+        Side_Long_Gate_Middle(true);
+        Side_Long_Gate_Corner(true);
+        Side_Long_Straight_Middle(true);
+        Side_Long_Straight_Corner(true);
     }
 
-    private void blueSide_Short_Corner(boolean blue){
+    private void Side_Short_Corner(boolean blue){
         if(blue) {
             turnToHeading(0.8, -90);
             //driveToColor(COLOR_THRESHOLD);
@@ -109,7 +106,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         }
 
     } //finished
-    private void blueSide_Short_Middle(boolean blue){
+    private void Side_Short_Middle(boolean blue){
 
         if(blue) {
             right(0.8, 70, 30000);
@@ -123,8 +120,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
         }
 
 
-    }
-    private void blueSide_Long_Straight_Corner(boolean blue){
+    } // finished
+    private void Side_Long_Straight_Corner(boolean blue){
         if(blue) {
             backwards(0.8, 10, 2000);
             turnToHeading(1, -90);
@@ -137,8 +134,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
         }
 
-    }
-    private void blueSide_Long_Straight_Middle(boolean blue){
+    } // finished
+    private void Side_Long_Straight_Middle(boolean blue){
         if(blue) {
             backwards(0.8, 10, 2000);
             turnToHeading(1, -90);
@@ -157,7 +154,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
         //driveToDistanceFromObject(1,20, 20000);
     }//finished
-    private void blueSide_Long_Gate_Corner(boolean blue){
+    private void Side_Long_Gate_Corner(boolean blue){
         if(blue) {
             left(0.7, 63, 10000);
             backwards(0.7, 75, 10000);
@@ -181,7 +178,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
         }
     }// finished
-    private void blueSide_Long_Gate_Middle(boolean blue){
+    private void Side_Long_Gate_Middle(boolean blue){
         if (blue) {
             left(0.7, 63, 10000);
             backwards(0.7, 75, 10000);
