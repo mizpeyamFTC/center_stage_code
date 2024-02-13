@@ -295,6 +295,8 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private void forward(double speed, double distance, double timeOut){
         distance *= DIST_NORM;
+
+
         driveDistanceByEncoder(speed, distance, distance,distance,distance, timeOut);
     }
     private void backwards(double speed, double distance, double timeOut){
