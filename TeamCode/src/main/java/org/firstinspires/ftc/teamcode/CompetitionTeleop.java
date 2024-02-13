@@ -178,7 +178,6 @@ public class CompetitionTeleop extends LinearOpMode {
     }
 
     //************************* - DIRECTIONAL DRIVE - *************************
-
     private void updateTelemetry() {
         /*
         telemetry.addData("LF", "%.3f", LF);
@@ -192,6 +191,8 @@ public class CompetitionTeleop extends LinearOpMode {
         telemetry.addData("LIFT", "%.3f", liftPow);
 
          */
+
+        int o = 8;
 
         /*if(tagProcessor.getDetections().size()>0){
             AprilTagDetection tag = tagProcessor.getDetections().get(0);
@@ -254,13 +255,11 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private void orientFinalJointForLiftTransaction() {
     }
-
     private void orientMiddleArmForLiftTransaction() {
         middleArmJoint.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         middleArmJoint.setTargetPosition(middleArmJointHomePosition);
         middleArmJoint.setPower(-0.7);//check if correct
     }
-
     private void intake() {
         openClaw();
         //orientMiddleArmForIntake();
