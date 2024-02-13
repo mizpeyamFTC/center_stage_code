@@ -209,7 +209,6 @@ public class CompetitionTeleop extends LinearOpMode {
     private void resetIMU(){
         initIMU();
     }
-
     private void powerDriveMotors(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower) {
         leftFront.setPower(frontLeftPower);
         leftRear.setPower(backLeftPower);
