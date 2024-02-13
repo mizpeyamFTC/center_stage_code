@@ -25,6 +25,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp(name = "CompetitionTeleop")
 public class CompetitionTeleop extends LinearOpMode {
 
+    private void guyguyguy(){}
+
     private DcMotor leftFront, leftRear, rightFront, rightRear;
     private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
