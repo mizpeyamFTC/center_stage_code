@@ -74,8 +74,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
     private final int COLOR_THRESHOLD = 400; // blue
-    AprilTagProcessor tagProcessor;
-    VisionPortal visionPortal;
+    //AprilTagProcessor tagProcessor;
+    //VisionPortal visionPortal;
 
 
     @Override
@@ -85,6 +85,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         runAutonomous();
     }
     private void runAutonomous(){
+        Side_Long_Gate_Corner(false);
 
 
 
@@ -157,22 +158,22 @@ public class CompetitionAutonomous extends LinearOpMode  {
             left(0.7, 63, 10000);
             backwards(0.7, 75, 10000);
             turnToHeading(0.7, 30);
-            backwards(0.7, 50, 1000);
+            backwards(0.7, 50, 10000);
             turnToHeading(1, -90);
-            forward(1, 200, 10000);
+            forward(1, 200, 1000);
             left(0.7, 120, 10000);
             forward(1, 60, 10000);
         }
         else {
 
-            right(0.7, 63, 10000);
-            backwards(0.7, 75, 10000);
-            turnToHeading(0.7, -30);
-            backwards(0.7, 50, 1000);
-            turnToHeading(1, -90);
-            forward(1, 200, 10000);
-            right(0.7, 120, 10000);
-            forward(1, 60, 10000);
+            right(0.5, 62, 10000);
+            backwards(0.5, 65, 10000);
+           turnToHeading(0.5, -25);
+           backwards(0.5, 50, 1000);
+            turnToHeading(1, 90);
+           forward(0.5, 200, 10000);
+          right(0.5, 120, 10000);
+            forward(0.5, 40, 10000);
 
         }
     }// finished
@@ -201,7 +202,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     //************************* - AUTONOMOUS MODES - *************************
 
 
-     private void goToAprilTag(AprilTagDetection tag){
+    private void goToAprilTag(AprilTagDetection tag){
         double x  = tag.ftcPose.x;
         double y  = tag.ftcPose.y;
         if(x>0){
@@ -212,28 +213,28 @@ public class CompetitionAutonomous extends LinearOpMode  {
         }
         double yaw = tag.ftcPose.yaw;
         turnToHeading(0.3,90);
-         if(x>0){
-             right(0.3, x, 10000);
-         }
-         if(x<0){
-             left(0.3, -x, 10000);
-         }
-         forward(0.3,tag.ftcPose.y, 10000);
+        if(x>0){
+            right(0.3, x, 10000);
+        }
+        if(x<0){
+            left(0.3, -x, 10000);
+        }
+        forward(0.3,tag.ftcPose.y, 10000);
 
-     }
+    }
     private void initCamera(){
-        tagProcessor = new AprilTagProcessor.Builder()
-                .setDrawAxes(true)
-                .setDrawCubeProjection(true)
-                .setDrawTagID(true)
-                .setDrawTagOutline(true)
-                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                .build();
-        visionPortal = new VisionPortal.Builder()
-                .addProcessor(tagProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .setCameraResolution(new Size(640, 480))
-                .build();
+//        tagProcessor = new AprilTagProcessor.Builder()
+//                .setDrawAxes(true)
+//                .setDrawCubeProjection(true)
+//                .setDrawTagID(true)
+//                .setDrawTagOutline(true)
+//                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+//                .build();
+//        visionPortal = new VisionPortal.Builder()
+//                .addProcessor(tagProcessor)
+//                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+//                .setCameraResolution(new Size(640, 480))
+//                .build();
     }
 
 
