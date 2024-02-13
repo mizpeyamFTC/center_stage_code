@@ -191,9 +191,6 @@ public class CompetitionTeleop extends LinearOpMode {
         telemetry.addData("LIFT", "%.3f", liftPow);
 
          */
-
-        int o = 8;
-
         /*if(tagProcessor.getDetections().size()>0){
             AprilTagDetection tag = tagProcessor.getDetections().get(0);
             telemetry.addData("x",tag.ftcPose.x);
