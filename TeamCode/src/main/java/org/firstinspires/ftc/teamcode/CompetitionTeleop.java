@@ -150,8 +150,8 @@ public class CompetitionTeleop extends LinearOpMode {
              * Dpad right = right AprilTag
              */
 
-            if(gamepad2.a) intake();
-            if(gamepad2.y) transferToLift();
+            //if(gamepad2.a) intake();
+            //if(gamepad2.y) transferToLift();
             if(gamepad2.b) openClaw();//almost done
             if(gamepad2.x) closeClaw();//almost done
             if(gamepad2.right_bumper)  scoreLowHeight();
@@ -162,12 +162,10 @@ public class CompetitionTeleop extends LinearOpMode {
             if(gamepad2.dpad_right) centerOnRightAprilTag();//optional
             if(gamepad1.a) resetIMU();
             //******
-            if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
+            //if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
 
-
-
-            finalArmJoint.setPower(gp2LeftStickY*0.8);
-            middleArmJoint.setPower(gp2RightStickY*0.8);
+            finalArmJoint.setPower(gp2LeftStickY*1);
+            middleArmJoint.setPower(gp2RightStickY*1);
 
 
 
@@ -180,7 +178,6 @@ public class CompetitionTeleop extends LinearOpMode {
     }
 
     //************************* - DIRECTIONAL DRIVE - *************************
-
 
     private void updateTelemetry() {
         /*
@@ -266,8 +263,8 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private void intake() {
         openClaw();
-        orientMiddleArmForIntake();
-        orientFinalJointForIntake();
+        //orientMiddleArmForIntake();
+        //orientFinalJointForIntake();
 
 
     }
@@ -276,8 +273,6 @@ public class CompetitionTeleop extends LinearOpMode {
         middleArmJoint.setTargetPosition(targetPosition);
         middleArmJoint.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         middleArmJoint.setPower(0.7);
-
-
     }
 
     private void orientFinalJointForIntake() {
@@ -505,7 +500,7 @@ public class CompetitionTeleop extends LinearOpMode {
         rightRear.setPower(0);
     }
     private void initCamera(){
-        tagProcessor = new AprilTagProcessor.Builder()
+        /*tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
                 .setDrawTagID(true)
@@ -517,6 +512,8 @@ public class CompetitionTeleop extends LinearOpMode {
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(640, 480))
                 .build();
+
+         */
     }
 
     //************************* - INITIALIZE - *************************
