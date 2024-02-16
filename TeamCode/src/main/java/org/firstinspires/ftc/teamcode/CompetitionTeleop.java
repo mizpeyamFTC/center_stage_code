@@ -27,6 +27,7 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private void guyguyguy(){}
 
+
     private DcMotor leftFront, leftRear, rightFront, rightRear;
     private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
@@ -131,6 +132,7 @@ public class CompetitionTeleop extends LinearOpMode {
             backRightPower = maxOutputPower*(rotY + rotX - rx);
 
             powerDriveMotors(frontLeftPower, backLeftPower, frontRightPower, backRightPower);
+            inspectIMU();
 
             /**
              * game pad 2:
@@ -174,6 +176,9 @@ public class CompetitionTeleop extends LinearOpMode {
         }
 
 
+
+    }
+    private void inspectIMU(){
 
     }
 

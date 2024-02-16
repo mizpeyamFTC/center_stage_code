@@ -63,7 +63,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private final double REV_WHEEL_DIAMETER_CM = 7.5;     // For figuring circumference
     private final double GOB_WHEEL_BASE_DISTANCE = 39;     // For figuring circumference
     private final double REV_WHEEL_BASE_DISTANCE = 37;     // For figuring circumference
-    private final double TURN_SPEED= 0.3;
+    private final double TURN_SPEED= 0.8;
     private final double MIN_TURN_SPEED = 0.2;
     private final double HEADING_THRESHOLD= 0.5 ;    // How close must the heading get to the target before moving to next step.
     private final double P_DRIVE_GAIN= 0.03;     // Larger is more responsive, but also less stable
@@ -72,7 +72,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not corrects strongly enough (eg: a heavy robot or using tracks)
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
-    private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
+    private final double P_TURN_GAIN= 0.03;     // Larger is more responsive, but also less stable
     private final int COLOR_THRESHOLD = 400; // blue
     //AprilTagProcessor tagProcessor;
     //VisionPortal visionPortal;
@@ -87,20 +87,18 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private void runAutonomous(){
         Side_Long_Gate_Corner(false);
 
-
-
     }
 
 
     //************************* - AUTONOMOUS MODES - *************************
     private void Side_Short_Corner(boolean blue){
         if(blue) {
-            turnToHeading(0.8, -90);
+            turnToHeading(0.6, -90);
             //driveToColor(COLOR_THRESHOLD);
             forward(0.8, 100, 10000);
         }
         else{
-            turnToHeading(0.8, 90);
+            turnToHeading(0.6, 90);
             forward(0.8, 100, 10000);
         }
 
@@ -155,25 +153,24 @@ public class CompetitionAutonomous extends LinearOpMode  {
     }//finished
     private void Side_Long_Gate_Corner(boolean blue){
         if(blue) {
-            left(0.7, 63, 10000);
+            left(0.7, 64, 10000);
             backwards(0.7, 75, 10000);
-            turnToHeading(0.7, 30);
+            turnToHeading(0.7, 25);
             backwards(0.7, 50, 10000);
-            turnToHeading(1, -90);
+            turnToHeading(0.7, -90);
             forward(1, 200, 1000);
             left(0.7, 120, 10000);
-            forward(1, 60, 10000);
+            forward(1, 40, 10000);
         }
         else {
-
-            right(0.5, 62, 10000);
-            backwards(0.5, 65, 10000);
-           turnToHeading(0.5, -25);
-           backwards(0.5, 50, 1000);
-            turnToHeading(1, 90);
-           forward(0.5, 200, 10000);
-          right(0.5, 120, 10000);
-            forward(0.5, 40, 10000);
+            right(0.7, 64, 10000);
+            backwards(0.7, 60, 10000);
+            turnToHeading(0.7, -25);
+            backwards(0.7, 50, 1000);
+            turnToHeading(0.7, 90);
+            forward(1, 200, 10000);
+            right(0.7, 130, 10000);
+            forward(1, 40, 10000);
 
         }
     }// finished
@@ -311,13 +308,13 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private void turnToHeading(double maxTurnSpeed, double heading) {
 
         // Run getSteeringCorrection() once to pre-calculate the current error
-        getSteeringCorrection(heading, P_DRIVE_GAIN);
+        getSteeringCorrection(heading, P_DRIVE_GAIN, maxTurnSpeed);
 
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && (Math.abs(targetHeading - getHeading()) > HEADING_THRESHOLD)) {
 
             // Determine required steering to keep on heading
-            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN, maxTurnSpeed);
 
             // Clip the speed to the maximum permitted value.
             turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
@@ -365,7 +362,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         return orientation.getYaw(AngleUnit.DEGREES);
     }
-    private double getSteeringCorrection(double desiredHeading, double proportionalGain) {
+    private double getSteeringCorrection(double desiredHeading, double proportionalGain, double turnSpeed) {
         targetHeading = desiredHeading;  // Save for telemetry
         boolean rightTurn = true;
 
@@ -392,13 +389,13 @@ public class CompetitionAutonomous extends LinearOpMode  {
             }
         }
 
-        double speed =  calc_turn_speed(headingError);
+        double speed =  calc_turn_speed(headingError, turnSpeed);
         if (rightTurn) return speed;
         else return -speed;
     }
-    private double calc_turn_speed (double headingError) {
+    private double calc_turn_speed (double headingError, double speed) {
 
-        if (Math.abs(headingError) > 10) return TURN_SPEED;
+        if (Math.abs(headingError) > 10) return Math.min(speed, TURN_SPEED);
         return MIN_TURN_SPEED;
     }
     private boolean isBlue() {
