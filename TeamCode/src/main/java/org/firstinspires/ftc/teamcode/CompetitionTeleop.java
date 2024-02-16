@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -85,10 +86,12 @@ public class CompetitionTeleop extends LinearOpMode {
     VisionPortal visionPortal;
 
 
+
     @Override
     public void runOpMode() throws InterruptedException {
-        waitForStart();
         initializeRobot();
+
+        waitForStart();
 
         double denominator, frontLeftPower, backLeftPower, frontRightPower, backRightPower;
         double rotX, rotY;
@@ -132,7 +135,6 @@ public class CompetitionTeleop extends LinearOpMode {
             backRightPower = maxOutputPower*(rotY + rotX - rx);
 
             powerDriveMotors(frontLeftPower, backLeftPower, frontRightPower, backRightPower);
-            inspectIMU();
 
             /**
              * game pad 2:
@@ -178,9 +180,7 @@ public class CompetitionTeleop extends LinearOpMode {
 
 
     }
-    private void inspectIMU(){
 
-    }
 
     //************************* - DIRECTIONAL DRIVE - *************************
     private void updateTelemetry() {
@@ -332,6 +332,7 @@ public class CompetitionTeleop extends LinearOpMode {
             }
             // Stop all motion;
             stopAllMotion();
+            setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
             if(runtime.seconds() > timeoutS){
                 telemetry.addData("runtime", "******TIME OUT******");
                 telemetry.update();
@@ -494,6 +495,7 @@ public class CompetitionTeleop extends LinearOpMode {
 
     }
     private void stopAllMotion() {
+
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftRear.setPower(0);
@@ -522,6 +524,7 @@ public class CompetitionTeleop extends LinearOpMode {
         initRobotParameters();
         initMotors();
         initIMU();
+        closeClaw();
 
     }
     private void initRobotParameters() {
@@ -563,18 +566,13 @@ public class CompetitionTeleop extends LinearOpMode {
     }
     private void initMotors(){
         assignHardwareToMotors();
-
         //intakeMotor = hardwareMap.dcMotor.get("intake");
         // liftMotor = hardwareMap.dcMotor.get("lift");
-
         initMotorsDirection();
-
         resetAllMotorsEncoders();
-
         setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        middleArmJoint.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
     }
     private void assignHardwareToMotors() {
         leftFront = hardwareMap.dcMotor.get("leftFront");
@@ -595,7 +593,6 @@ public class CompetitionTeleop extends LinearOpMode {
         rightFront.setMode(runMode);
         leftRear.setMode(runMode);
         rightRear.setMode(runMode);
-        middleArmJoint.setMode(runMode);
     }
     private void initMotorsDirection() {
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -603,13 +600,10 @@ public class CompetitionTeleop extends LinearOpMode {
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
         middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
-        finalArmJoint.setDirection(CRServo.Direction.REVERSE);
+        finalArmJoint.setDirection(CRServo.Direction.FORWARD);
     }
     private void turnOnRunToPosition() {
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     //*************************INITIALIZE*************************
 }
