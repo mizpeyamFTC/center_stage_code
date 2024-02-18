@@ -461,6 +461,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         initIMU();
         initCamera();
 
+
     }
 
     private void initRobotParameters() {
