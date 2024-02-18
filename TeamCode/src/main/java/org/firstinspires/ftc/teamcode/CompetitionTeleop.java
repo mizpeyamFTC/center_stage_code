@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 public class CompetitionTeleop extends LinearOpMode {
 
     private void guyguyguy(){}
+
 
     private DcMotor leftFront, leftRear, rightFront, rightRear;
     private  DcMotor middleArmJoint;
@@ -84,10 +86,12 @@ public class CompetitionTeleop extends LinearOpMode {
     VisionPortal visionPortal;
 
 
+
     @Override
     public void runOpMode() throws InterruptedException {
-        waitForStart();
         initializeRobot();
+
+        waitForStart();
 
         double denominator, frontLeftPower, backLeftPower, frontRightPower, backRightPower;
         double rotX, rotY;
@@ -102,7 +106,7 @@ public class CompetitionTeleop extends LinearOpMode {
             updateTelemetry();
             //*********************
 
-            gp2LeftStickY = gamepad2.left_stick_y;
+            gp2LeftStickY = -gamepad2.left_stick_y;
             gp2LeftStickX = gamepad2.left_stick_x;
             gp2RightStickY = gamepad2.right_stick_y;
             gp2RightStickX = gamepad2.right_stick_x;
@@ -111,7 +115,7 @@ public class CompetitionTeleop extends LinearOpMode {
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            motorMax = 0.7+gamepad1.right_trigger/10*3;
+            motorMax = 0.5+gamepad1.right_trigger*0.5;
 
             botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             telemetryAddIMUData();
@@ -150,8 +154,8 @@ public class CompetitionTeleop extends LinearOpMode {
              * Dpad right = right AprilTag
              */
 
-            if(gamepad2.a) intake();
-            if(gamepad2.y) transferToLift();
+            //if(gamepad2.a) intake();
+            //if(gamepad2.y) transferToLift();
             if(gamepad2.b) openClaw();//almost done
             if(gamepad2.x) closeClaw();//almost done
             if(gamepad2.right_bumper)  scoreLowHeight();
@@ -162,12 +166,10 @@ public class CompetitionTeleop extends LinearOpMode {
             if(gamepad2.dpad_right) centerOnRightAprilTag();//optional
             if(gamepad1.a) resetIMU();
             //******
-            if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
+            //if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
 
-
-
-            finalArmJoint.setPower(gp2LeftStickY*0.8);
-            middleArmJoint.setPower(gp2RightStickY*0.8);
+            finalArmJoint.setPower(gp2LeftStickY*1);
+            middleArmJoint.setPower(gp2RightStickY*1);
 
 
 
@@ -179,9 +181,8 @@ public class CompetitionTeleop extends LinearOpMode {
 
     }
 
+
     //************************* - DIRECTIONAL DRIVE - *************************
-
-
     private void updateTelemetry() {
         /*
         telemetry.addData("LF", "%.3f", LF);
@@ -195,7 +196,6 @@ public class CompetitionTeleop extends LinearOpMode {
         telemetry.addData("LIFT", "%.3f", liftPow);
 
          */
-
         /*if(tagProcessor.getDetections().size()>0){
             AprilTagDetection tag = tagProcessor.getDetections().get(0);
             telemetry.addData("x",tag.ftcPose.x);
@@ -214,7 +214,6 @@ public class CompetitionTeleop extends LinearOpMode {
     private void resetIMU(){
         initIMU();
     }
-
     private void powerDriveMotors(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower) {
         leftFront.setPower(frontLeftPower);
         leftRear.setPower(backLeftPower);
@@ -257,17 +256,15 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private void orientFinalJointForLiftTransaction() {
     }
-
     private void orientMiddleArmForLiftTransaction() {
         middleArmJoint.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         middleArmJoint.setTargetPosition(middleArmJointHomePosition);
         middleArmJoint.setPower(-0.7);//check if correct
     }
-
     private void intake() {
         openClaw();
-        orientMiddleArmForIntake();
-        orientFinalJointForIntake();
+        //orientMiddleArmForIntake();
+        //orientFinalJointForIntake();
 
 
     }
@@ -276,8 +273,6 @@ public class CompetitionTeleop extends LinearOpMode {
         middleArmJoint.setTargetPosition(targetPosition);
         middleArmJoint.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         middleArmJoint.setPower(0.7);
-
-
     }
 
     private void orientFinalJointForIntake() {
@@ -337,6 +332,7 @@ public class CompetitionTeleop extends LinearOpMode {
             }
             // Stop all motion;
             stopAllMotion();
+            setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
             if(runtime.seconds() > timeoutS){
                 telemetry.addData("runtime", "******TIME OUT******");
                 telemetry.update();
@@ -499,13 +495,14 @@ public class CompetitionTeleop extends LinearOpMode {
 
     }
     private void stopAllMotion() {
+
         leftFront.setPower(0);
         rightFront.setPower(0);
         leftRear.setPower(0);
         rightRear.setPower(0);
     }
     private void initCamera(){
-        tagProcessor = new AprilTagProcessor.Builder()
+        /*tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
                 .setDrawTagID(true)
@@ -517,6 +514,8 @@ public class CompetitionTeleop extends LinearOpMode {
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(640, 480))
                 .build();
+
+         */
     }
 
     //************************* - INITIALIZE - *************************
@@ -525,6 +524,7 @@ public class CompetitionTeleop extends LinearOpMode {
         initRobotParameters();
         initMotors();
         initIMU();
+        closeClaw();
 
     }
     private void initRobotParameters() {
@@ -566,18 +566,13 @@ public class CompetitionTeleop extends LinearOpMode {
     }
     private void initMotors(){
         assignHardwareToMotors();
-
         //intakeMotor = hardwareMap.dcMotor.get("intake");
         // liftMotor = hardwareMap.dcMotor.get("lift");
-
         initMotorsDirection();
-
         resetAllMotorsEncoders();
-
         setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        middleArmJoint.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
     }
     private void assignHardwareToMotors() {
         leftFront = hardwareMap.dcMotor.get("leftFront");
@@ -598,7 +593,6 @@ public class CompetitionTeleop extends LinearOpMode {
         rightFront.setMode(runMode);
         leftRear.setMode(runMode);
         rightRear.setMode(runMode);
-        middleArmJoint.setMode(runMode);
     }
     private void initMotorsDirection() {
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -606,13 +600,10 @@ public class CompetitionTeleop extends LinearOpMode {
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
         middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
-        finalArmJoint.setDirection(CRServo.Direction.REVERSE);
+        finalArmJoint.setDirection(CRServo.Direction.FORWARD);
     }
     private void turnOnRunToPosition() {
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     //*************************INITIALIZE*************************
 }
