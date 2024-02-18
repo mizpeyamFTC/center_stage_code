@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -32,7 +33,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private DistanceSensor distanceSensor;
     private ColorSensor colorSensor;
     private IMU imu;
-    private IMU.Parameters myIMUparameters;
     private final boolean MAIN_ROBOT = true; // false for ROBOT_B
     private double DIST_NORM, SIDE_DIST_NORM, WHEEL_DIAMETER_CM, WHEEL_BASE_DISTANCE, FULL_ROUND;
     private double COUNTS_PER_CM;
@@ -80,37 +80,51 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        waitForStart();
         initializeRobot();
+        closeClaw();
+        waitForStart();
         runAutonomous();
     }
     private void runAutonomous(){
-        Side_Long_Gate_Corner(false);
-
+        Side_Short_Corner(true);
     }
+
 
 
     //************************* - AUTONOMOUS MODES - *************************
     private void Side_Short_Corner(boolean blue){
         if(blue) {
-            turnToHeading(0.6, -90);
+            backwards(0.7, 70,10000 );
+            forward(0.7, 67,10000 );
+            forward(0.2, 10,2000);
+            turnToHeading(0.5, -85);
             //driveToColor(COLOR_THRESHOLD);
-            forward(0.8, 100, 10000);
+            forward(0.8, 87, 10000);
+
         }
         else{
-            turnToHeading(0.6, 90);
-            forward(0.8, 100, 10000);
+            backwards(0.7, 67,10000 );
+            forward(0.7, 63,10000 );
+            forward(0.2, 10,2000);
+            turnToHeading(0.5, 85);
+            forward(0.8, 82, 10000);
         }
 
     } //finished
-    private void Side_Short_Middle(boolean blue){
+     private void Side_Short_Middle(boolean blue){
 
         if(blue) {
+            backwards(0.7, 70,10000 );
+            forward(0.7, 70,10000 );
+            forward(0.2, 10,2000);
             right(0.8, 70, 30000);
             backwards(0.8, 100, 10000);
             right(0.8, 50, 10000);
         }
         else{
+            backwards(0.7, 70,10000 );
+            forward(0.7, 70,10000 );
+            forward(0.2, 10,2000);
             left(0.8, 70, 30000);
             backwards(0.8, 100, 10000);
             left(0.8, 50, 10000);
@@ -154,7 +168,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private void Side_Long_Gate_Corner(boolean blue){
         if(blue) {
             left(0.7, 64, 10000);
-            backwards(0.7, 75, 10000);
+            backwards(0.7, 60, 10000);
             turnToHeading(0.7, 25);
             backwards(0.7, 50, 10000);
             turnToHeading(0.7, -90);
@@ -169,7 +183,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
             backwards(0.7, 50, 1000);
             turnToHeading(0.7, 90);
             forward(1, 200, 10000);
-            right(0.7, 130, 10000);
+            right(0.7, 120, 10000);
             forward(1, 40, 10000);
 
         }
@@ -197,6 +211,10 @@ public class CompetitionAutonomous extends LinearOpMode  {
     } // finished
 
     //************************* - AUTONOMOUS MODES - *************************
+
+    private void closeClaw() {
+        clawServo.setPosition(0);
+    }
 
 
     private void goToAprilTag(AprilTagDetection tag){
@@ -518,7 +536,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
         middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
-        finalArmJoint.setDirection(CRServo.Direction.REVERSE);
+        finalArmJoint.setDirection(CRServo.Direction.FORWARD);
     }
     private void turnOnRunToPosition() {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);

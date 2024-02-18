@@ -106,7 +106,7 @@ public class CompetitionTeleop extends LinearOpMode {
             updateTelemetry();
             //*********************
 
-            gp2LeftStickY = gamepad2.left_stick_y;
+            gp2LeftStickY = -gamepad2.left_stick_y;
             gp2LeftStickX = gamepad2.left_stick_x;
             gp2RightStickY = gamepad2.right_stick_y;
             gp2RightStickX = gamepad2.right_stick_x;
@@ -115,7 +115,7 @@ public class CompetitionTeleop extends LinearOpMode {
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            motorMax = 0.7+gamepad1.right_trigger/10*3;
+            motorMax = 0.5+gamepad1.right_trigger*0.5;
 
             botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             telemetryAddIMUData();
