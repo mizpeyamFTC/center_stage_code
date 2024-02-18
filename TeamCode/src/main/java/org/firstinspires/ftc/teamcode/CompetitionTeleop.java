@@ -605,5 +605,5 @@ public class CompetitionTeleop extends LinearOpMode {
     private void turnOnRunToPosition() {
         setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
-    //*************************INITIALIZE*************************
+    //*************************INITIALIZE*********************
 }
