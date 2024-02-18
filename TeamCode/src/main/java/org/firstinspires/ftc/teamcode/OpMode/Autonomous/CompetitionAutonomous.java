@@ -302,7 +302,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
             }
             // Stop all motion;
             stopAllMotion();
-            if(runtime.seconds() > timeoutS){
+            if(runtime.seconds() > timeoutS) {
                 telemetry.addData("runtime", "******TIME OUT******");
                 telemetry.update();
             }
