@@ -213,7 +213,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     //************************* - AUTONOMOUS MODES - *************************
 
     private void closeClaw() {
-        clawServo.setPosition(0);
+        clawServo.setPosition(Servo.MIN_POSITION);
     }
 
 

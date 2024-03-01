@@ -30,9 +30,11 @@ public class CompetitionTeleop extends LinearOpMode {
 
 
     private DcMotor leftFront, leftRear, rightFront, rightRear;
+    private DcMotor liftL, liftR;
     private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
     private Servo clawServo;
+    private Servo planeServo;
     private DistanceSensor distanceSensor;
     private ColorSensor colorSensor;
     private IMU controlHubIMU;
@@ -106,7 +108,7 @@ public class CompetitionTeleop extends LinearOpMode {
             updateTelemetry();
             //*********************
 
-            gp2LeftStickY = -gamepad2.left_stick_y;
+            gp2LeftStickY = gamepad2.left_stick_y;
             gp2LeftStickX = gamepad2.left_stick_x;
             gp2RightStickY = gamepad2.right_stick_y;
             gp2RightStickX = gamepad2.right_stick_x;
@@ -115,7 +117,7 @@ public class CompetitionTeleop extends LinearOpMode {
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            motorMax = 0.5+gamepad1.right_trigger*0.5;
+            motorMax = 0.5+gamepad1.right_trigger/10*5;
 
             botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             telemetryAddIMUData();
@@ -158,6 +160,8 @@ public class CompetitionTeleop extends LinearOpMode {
             //if(gamepad2.y) transferToLift();
             if(gamepad2.b) openClaw();//almost done
             if(gamepad2.x) closeClaw();//almost done
+            if(gamepad2.a) openPlane();//almost done
+            if(gamepad2.y) closePlane();//almost done
             if(gamepad2.right_bumper)  scoreLowHeight();
             if(gamepad2.touchpad) scoreMiddleHeight();
             if(gamepad2.left_bumper)  scoreHighHeight();
@@ -287,6 +291,13 @@ public class CompetitionTeleop extends LinearOpMode {
         clawServo.setPosition(1);
     }
 
+    private void closePlane() {
+        planeServo.setPosition(0);
+    }
+
+    private void openPlane() {
+        planeServo.setPosition(1);
+    }
 
     private void forward(double speed, double distance, double timeOut){
         distance *= DIST_NORM;
@@ -582,6 +593,7 @@ public class CompetitionTeleop extends LinearOpMode {
         middleArmJoint = hardwareMap.get(DcMotor.class, "middleArmJoint");
         finalArmJoint = hardwareMap.get(CRServo.class,"finalArmJoint" );
         clawServo = hardwareMap.get(Servo.class,"clawServo" );
+        planeServo = hardwareMap.get(Servo.class, "planeServo");
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
 
     }
@@ -605,5 +617,5 @@ public class CompetitionTeleop extends LinearOpMode {
     private void turnOnRunToPosition() {
         setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
-    //*************************INITIALIZE*********************
+    //*************************INITIALIZE*************************
 }
