@@ -1,27 +1,21 @@
 package org.firstinspires.ftc.teamcode.OpMode.Autonomous;
 
-import android.util.Size;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @Autonomous(name= "competAuton")
 public class CompetitionAutonomous extends LinearOpMode  {
@@ -29,7 +23,12 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private DcMotor leftFront, leftRear, rightFront, rightRear;
     private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
-    private Servo clawServo;
+    private Servo leftClawServo, rightClawServo;
+    private final int LEFT_CLAW_CLOSED = 0;
+    private final int LEFT_CLAW_OPENED = 1;
+    private final int RIGHT_CLAW_CLOSED = 1;
+    private final int RIGHT_CLAW_OPENED = 0;
+
     private DistanceSensor distanceSensor;
     private ColorSensor colorSensor;
     private IMU imu;
@@ -81,12 +80,12 @@ public class CompetitionAutonomous extends LinearOpMode  {
     @Override
     public void runOpMode() throws InterruptedException {
         initializeRobot();
-        closeClaw();
+        closeClaws();
         waitForStart();
         runAutonomous();
     }
     private void runAutonomous(){
-        Side_Short_Corner(true);
+        Side_Long_Gate_Corner(true);
     }
 
 
@@ -94,72 +93,68 @@ public class CompetitionAutonomous extends LinearOpMode  {
     //************************* - AUTONOMOUS MODES - *************************
     private void Side_Short_Corner(boolean blue){
         if(blue) {
-            backwards(0.7, 70,10000 );
-            forward(0.7, 67,10000 );
-            forward(0.2, 10,2000);
+            autonPutPixelInMiddle();
             turnToHeading(0.5, -85);
             //driveToColor(COLOR_THRESHOLD);
-            forward(0.8, 87, 10000);
+            forward(0.8, 87, 10000, true);
 
         }
         else{
-            backwards(0.7, 67,10000 );
-            forward(0.7, 63,10000 );
-            forward(0.2, 10,2000);
+            autonPutPixelInMiddle();
             turnToHeading(0.5, 85);
-            forward(0.8, 82, 10000);
+            forward(0.8, 82, 10000, true);
         }
 
     } //finished
      private void Side_Short_Middle(boolean blue){
 
         if(blue) {
-            backwards(0.7, 70,10000 );
-            forward(0.7, 70,10000 );
-            forward(0.2, 10,2000);
-            right(0.8, 70, 30000);
-            backwards(0.8, 100, 10000);
-            right(0.8, 50, 10000);
+            autonPutPixelInMiddle();
+            right(0.8, 70, 30000, true);
+            backwards(0.8, 100, 10000, true);
+            right(0.8, 50, 10000, true);
         }
         else{
-            backwards(0.7, 70,10000 );
-            forward(0.7, 70,10000 );
-            forward(0.2, 10,2000);
-            left(0.8, 70, 30000);
-            backwards(0.8, 100, 10000);
-            left(0.8, 50, 10000);
+            autonPutPixelInMiddle();
+            left(0.8, 70, 30000, true);
+            backwards(0.8, 100, 10000, true);
+            left(0.8, 50, 10000, true);
         }
 
 
     } // finished
     private void Side_Long_Straight_Corner(boolean blue){
         if(blue) {
-            backwards(0.8, 10, 2000);
+            autonPutPixelInMiddle();
+            backwards(0.8, 10, 2000, true);
             turnToHeading(1, -90);
-            forward(1, 210, 10000);
+            forward(1, 210, 10000, true);
         }
         else {
-            backwards(0.8, 10, 2000);
+            autonPutPixelInMiddle();
+            backwards(0.8, 10, 2000, true);
             turnToHeading(1, 90);
-            forward(1, 210, 10000);
+            forward(1, 210, 10000, true);
 
         }
 
     } // finished
     private void Side_Long_Straight_Middle(boolean blue){
         if(blue) {
-            backwards(0.8, 10, 2000);
+            autonPutPixelInMiddle();
+            backwards(0.8, 10, 2000, true);
             turnToHeading(1, -90);
-            forward(1, 180, 10000);
-            right(1,120,10000);
-            forward(1,30,10000);
+            forward(1, 180, 10000, true);
+            right(1,120,10000, true);
+            forward(1,30,10000, true);
         }
         else {
-            backwards(0.8, 10, 2000);
+            autonPutPixelInMiddle();
+            backwards(0.8, 10, 2000, true);
             turnToHeading(1, 90);
-            forward(1, 210, 10000);
-            left(1,120,10000);
-            forward(1,30,10000);
+            forward(1, 210, 10000, true);
+            left(1,120,10000, true);
+            forward(1,30,10000, true);
         }
 
 
@@ -167,53 +162,75 @@ public class CompetitionAutonomous extends LinearOpMode  {
     }//finished
     private void Side_Long_Gate_Corner(boolean blue){
         if(blue) {
-            left(0.7, 64, 10000);
-            backwards(0.7, 60, 10000);
-            turnToHeading(0.7, 25);
-            backwards(0.7, 50, 10000);
-            turnToHeading(0.7, -90);
-            forward(1, 200, 1000);
-            left(0.7, 120, 10000);
-            forward(1, 40, 10000);
+            autonPutPixelInMiddle();
+            left(0.7, 63, 10000, true);
+            backwards(0.7, 75, 10000, true);
+            turnToHeading(0.7, 30);
+            backwards(0.7, 50, 1000, true);
+            turnToHeading(1, -90);
+            forward(1, 200, 1000, true);
+            left(0.7, 120, 10000, true);
+            forward(1, 40, 10000, true);
         }
         else {
-            right(0.7, 64, 10000);
-            backwards(0.7, 60, 10000);
+            backwards(0.7, 70,10000 , true);
+            forward(0.7, 67,10000 , true);
+            forward(0.2, 10,2000, true);
+            right(0.7, 64, 10000, true);
+            backwards(0.7, 60, 10000, true);
             turnToHeading(0.7, -25);
-            backwards(0.7, 50, 1000);
+            backwards(0.7, 50, 1000, true);
             turnToHeading(0.7, 90);
-            forward(1, 200, 10000);
-            right(0.7, 120, 10000);
-            forward(1, 40, 10000);
+            forward(1, 200, 10000, true);
+            right(0.7, 120, 10000, true);
+            forward(1, 40, 10000, true);
 
         }
     }// finished
+
     private void Side_Long_Gate_Middle(boolean blue){
         if (blue) {
-            left(0.7, 63, 10000);
-            backwards(0.7, 75, 10000);
+            autonPutPixelInMiddle();
+            left(0.7, 63, 10000, true);
+            backwards(0.7, 75, 10000, true);
             turnToHeading(0.7, 30);
-            backwards(0.7, 50, 1000);
+            backwards(0.7, 50, 1000, true);
             turnToHeading(1, 90);
-            backwards(1, 210, 10000);
+            backwards(1, 210, 10000, true);
         }
         else {
-            right(0.7, 63, 10000);
-            backwards(0.7, 75, 10000);
+            autonPutPixelInMiddle();
+            right(0.7, 63, 2000, true);
+            backwards(0.7, 75, 10000, true);
             turnToHeading(0.7, -30);
-            backwards(0.7, 50, 1000);
+            backwards(0.7, 50, 1000, true);
             turnToHeading(1, 90);
-            backwards(1, 210, 10000);
+            forward(1, 220, 10000, true);
 
-        }
+        } //checked!!!!!
 
 
     } // finished
+    private void autonPutPixelInMiddle() {
+        backwards(0.7, 68,10000 , true);
+        forward(0.7, 60,10000 , false);
+        forward(0.2, 10,400, true);
+    }
 
     //************************* - AUTONOMOUS MODES - *************************
 
-    private void closeClaw() {
-        clawServo.setPosition(Servo.MIN_POSITION);
+    private void closeClaws() {
+        closeLeftClaw();
+        closeRightClaw();
+    }
+    private void openLeftClaw(){
+        leftClawServo.setPosition(LEFT_CLAW_OPENED);
+    }
+    private void closeLeftClaw(){
+        leftClawServo.setPosition(LEFT_CLAW_CLOSED);
+    }
+    private void closeRightClaw(){
+        rightClawServo.setPosition(RIGHT_CLAW_CLOSED);
     }
 
 
@@ -221,20 +238,20 @@ public class CompetitionAutonomous extends LinearOpMode  {
         double x  = tag.ftcPose.x;
         double y  = tag.ftcPose.y;
         if(x>0){
-            right(0.3, x, 10000);
+            right(0.3, x, 10000, true);
         }
         if(x<0){
-            left(0.3, -x, 10000);
+            left(0.3, -x, 10000, true);
         }
         double yaw = tag.ftcPose.yaw;
         turnToHeading(0.3,90);
         if(x>0){
-            right(0.3, x, 10000);
+            right(0.3, x, 10000, true);
         }
         if(x<0){
-            left(0.3, -x, 10000);
+            left(0.3, -x, 10000, true);
         }
-        forward(0.3,tag.ftcPose.y, 10000);
+        forward(0.3,tag.ftcPose.y, 10000, true);
 
     }
     private void initCamera(){
@@ -258,21 +275,21 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
 
 //************************* - DIRECTIONAL DRIVE - *************************
-    private void forward(double speed, double distance, double timeOut){
+    private void forward(double speed, double distance, double timeOut, boolean stopOnEnd){
         distance *= DIST_NORM;
-        driveDistanceByEncoder(speed, distance, distance,distance,distance, timeOut);
+        driveDistanceByEncoder(speed, distance, distance,distance,distance, timeOut, stopOnEnd);
     }
-    private void backwards(double speed, double distance, double timeOut){
+    private void backwards(double speed, double distance, double timeOut, boolean stopOnEnd){
         distance *= DIST_NORM;
-        driveDistanceByEncoder(speed, -distance, -distance,-distance,-distance, timeOut);
+        driveDistanceByEncoder(speed, -distance, -distance,-distance,-distance, timeOut, stopOnEnd);
     }
-    private void right(double speed, double distance, double timeOut){
+    private void right(double speed, double distance, double timeOut, boolean stopOnEnd){
         distance *= SIDE_DIST_NORM;
-        driveDistanceByEncoder(speed, distance, -distance, -distance,distance, timeOut);
+        driveDistanceByEncoder(speed, distance, -distance, -distance,distance, timeOut, stopOnEnd);
     }
-    private void left(double speed, double distance, double timeOut){
+    private void left(double speed, double distance, double timeOut, boolean stopOnEnd){
         distance *= SIDE_DIST_NORM;
-        driveDistanceByEncoder(speed, -distance, distance,distance,-distance, timeOut);
+        driveDistanceByEncoder(speed, -distance, distance,distance,-distance, timeOut, stopOnEnd);
     }
     //************************* - DIRECTIONAL DRIVE - *************************
 
@@ -281,7 +298,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
     //************************* - SUPERVISED DRIVE - *************************
     private void driveDistanceByEncoder(double speed,
                                         double leftFrontCm, double rightFrontCm, double leftRearCm, double rightRearCm,
-                                        double timeoutS) {
+                                        double timeoutS, boolean stopOnEnd) {
 
         // Ensure that the OpMode is still active
         if (opModeIsActive()) {
@@ -301,7 +318,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
                 runToPosition(speed);
             }
             // Stop all motion;
-            stopAllMotion();
+            if(stopOnEnd) stopAllMotion();
+
             if(runtime.seconds() > timeoutS) {
                 telemetry.addData("runtime", "******TIME OUT******");
                 telemetry.update();
@@ -520,7 +538,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
         rightRear = hardwareMap.dcMotor.get("rightRear");
         middleArmJoint = hardwareMap.get(DcMotor.class, "middleArmJoint");
         finalArmJoint = hardwareMap.get(CRServo.class,"finalArmJoint" );
-        clawServo = hardwareMap.get(Servo.class,"clawServo" );
+        leftClawServo = hardwareMap.get(Servo.class,"leftClawServo" );
+        rightClawServo = hardwareMap.get(Servo.class,"rightClawServo" );
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
 
     }

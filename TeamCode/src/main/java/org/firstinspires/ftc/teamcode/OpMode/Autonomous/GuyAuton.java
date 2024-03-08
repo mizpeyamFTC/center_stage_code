@@ -91,7 +91,7 @@ public class GuyAuton extends LinearOpMode {
     @Override
     public void runOpMode() {
         //initRobot();
-        initIMU();
+        //initIMU();
         // Initialize the drive system variables.
         //initializeMotors();
         //sendSuccessfulMotorResetMessage();
@@ -134,9 +134,14 @@ public class GuyAuton extends LinearOpMode {
         }
 
          */
-
         initTfod();
-        telemetryTfod();
+
+        waitForStart();
+
+        while(opModeIsActive()){
+            telemetryTfod();
+
+        }
     }
     TfodProcessor tfod;
 
