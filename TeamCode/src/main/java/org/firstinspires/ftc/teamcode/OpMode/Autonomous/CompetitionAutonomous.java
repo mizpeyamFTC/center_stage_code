@@ -85,7 +85,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         runAutonomous();
     }
     private void runAutonomous(){
-        Side_Long_Gate_Corner(true);
+        Side_Long_Gate_Middle(false);
     }
 
 
@@ -126,16 +126,17 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private void Side_Long_Straight_Corner(boolean blue){
         if(blue) {
             autonPutPixelInMiddle();
-            backwards(0.8, 10, 2000, true);
+            backwards(0.5, 10, 2000, true);
             turnToHeading(1, -90);
-            forward(1, 210, 10000, true);
+            forward(0.5, 210, 10000, true);
+            //checked!!!!!
         }
         else {
             autonPutPixelInMiddle();
-            backwards(0.8, 10, 2000, true);
+            backwards(0.5, 7, 2000, true);
             turnToHeading(1, 90);
-            forward(1, 210, 10000, true);
-
+            forward(0.5, 210, 10000, true);
+            //checked!!!!!
         }
 
     } // finished
@@ -147,6 +148,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
             forward(1, 180, 10000, true);
             right(1,120,10000, true);
             forward(1,30,10000, true);
+            //checked!!!!!
         }
         else {
             autonPutPixelInMiddle();
@@ -155,6 +157,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
             forward(1, 210, 10000, true);
             left(1,120,10000, true);
             forward(1,30,10000, true);
+            //checked!!!!!
         }
 
 
@@ -163,27 +166,29 @@ public class CompetitionAutonomous extends LinearOpMode  {
     private void Side_Long_Gate_Corner(boolean blue){
         if(blue) {
             autonPutPixelInMiddle();
-            left(0.7, 63, 10000, true);
-            backwards(0.7, 75, 10000, true);
+            left(0.7, 58, 10000, true);
+            backwards(0.5, 75, 10000, true);
             turnToHeading(0.7, 30);
-            backwards(0.7, 50, 1000, true);
-            turnToHeading(1, -90);
-            forward(1, 200, 1000, true);
-            left(0.7, 120, 10000, true);
-            forward(1, 40, 10000, true);
+            backwards(0.7, 60, 1000, true);
+            turnToHeading(0.5, -90);
+            forward(0.5,50,10,false ) ;
+            forward(1, 125, 1000, true);
+            left(0.7, 115, 2000, true);
+            forward(1, 25, 10000, true);
+            //checked!!!!!
         }
         else {
-            backwards(0.7, 70,10000 , true);
-            forward(0.7, 67,10000 , true);
-            forward(0.2, 10,2000, true);
-            right(0.7, 64, 10000, true);
-            backwards(0.7, 60, 10000, true);
-            turnToHeading(0.7, -25);
-            backwards(0.7, 50, 1000, true);
+            right(0.7, 58, 10000, true);
+            backwards(0.5, 75, 10000, true);
+            turnToHeading(0.7, -30);
+            backwards(0.7, 60, 1000, true);
             turnToHeading(0.7, 90);
-            forward(1, 200, 10000, true);
-            right(0.7, 120, 10000, true);
-            forward(1, 40, 10000, true);
+            forward(0.5, 50, 10, false);
+            forward(1, 125, 1000, true);
+            right(0.7, 115, 10000, true);
+            forward(1, 35, 10000, true);
+            //checked!!!!!
+
 
         }
     }// finished
