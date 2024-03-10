@@ -86,7 +86,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         runAutonomous();
     }
     private void runAutonomous(){
-        Side_Long_Gate_Middle(false);
+        Side_Short_Corner(true);
     }
 
 
@@ -115,7 +115,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
         if(blue) {
             backwards(0.7, 70,10000 );
-            forward(0.7, 67,10000 );
+            forward(0.7, 70,10000 );
             forward(0.2, 10,2000);
             right(0.8, 70, 30000);
             backwards(0.8, 100, 10000);
@@ -123,7 +123,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         }
         else{
             backwards(0.7, 70,10000 );
-            forward(0.7, 67,10000 );
+            forward(0.7, 70,10000 );
             forward(0.2, 10,2000);
             left(0.8, 70, 30000);
             backwards(0.8, 100, 10000);
@@ -195,20 +195,15 @@ public class CompetitionAutonomous extends LinearOpMode  {
             turnToHeading(0.7, 30);
             backwards(0.7, 50, 1000);
             turnToHeading(1, 90);
-            backwards(1, 230, 10000);
+            backwards(1, 210, 10000);
         }
         else {
-            backwards(0.7, 70,10000 );
-            forward(0.7, 67,10000 );
-            forward(0.2, 10,2000);
             right(0.7, 63, 10000);
             backwards(0.7, 75, 10000);
             turnToHeading(0.7, -30);
             backwards(0.7, 50, 1000);
             turnToHeading(1, 90);
-            forward(1, 230, 10000);
-            openClaw();
-
+            backwards(1, 210, 10000);
 
         }
 
@@ -219,9 +214,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
     private void closeClaw() {
         clawServo.setPosition(0);
-    }
-    private void openClaw() {
-        clawServo.setPosition(1);
     }
 
 

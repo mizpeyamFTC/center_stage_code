@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Size;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,12 +8,12 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -26,18 +24,26 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp(name = "CompetitionTeleop")
 public class CompetitionTeleop extends LinearOpMode {
 
-    private void guyguyguy(){}
+
 
 
     private DcMotor leftFront, leftRear, rightFront, rightRear;
+    private DcMotor liftL, liftR;
+    private DcMotor elevatorRight;
+    private DcMotor elevatorLeft;
     private  DcMotor middleArmJoint;
     private CRServo finalArmJoint;
-    private Servo clawServo;
+
+    private Servo leftClawServo, rightClawServo;
+
+    private boolean leftClawOpen = true;
+    private boolean rightClawOpen = true;
+    private Servo planeServo;
     private DistanceSensor distanceSensor;
     private ColorSensor colorSensor;
     private IMU controlHubIMU;
 
-    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+
     private double DIST_NORM, SIDE_DIST_NORM, WHEEL_DIAMETER_CM, WHEEL_BASE_DISTANCE, FULL_ROUND;
     private double COUNTS_PER_CM;
 
@@ -46,11 +52,7 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private double motorMax = 0.5;
 
-    private final double driveMax = 0.9;
-    private final double turnMax = 0.5;
 
-
-    private final long SHORT_SIDE_WAIT = 10000;
 
     private int newLeftFrontTarget;
     private int newRightFrontTarget;
@@ -82,6 +84,14 @@ public class CompetitionTeleop extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
     private final int COLOR_THRESHOLD = 400; // blue
+    private final double DRIVE_MAX = 0.9;
+    private final double TURN_MAX = 0.5;
+    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+    private final int LEFT_CLAW_CLOSED = 0;
+    private final int LEFT_CLAW_OPENED = 1;
+    private final int RIGHT_CLAW_CLOSED = 1;
+    private final int RIGHT_CLAW_OPENED = 0;
+    private final long SHORT_SIDE_WAIT = 10000;
     AprilTagProcessor tagProcessor;
     VisionPortal visionPortal;
 
@@ -106,7 +116,7 @@ public class CompetitionTeleop extends LinearOpMode {
             updateTelemetry();
             //*********************
 
-            gp2LeftStickY = -gamepad2.left_stick_y;
+            gp2LeftStickY = gamepad2.left_stick_y;
             gp2LeftStickX = gamepad2.left_stick_x;
             gp2RightStickY = gamepad2.right_stick_y;
             gp2RightStickX = gamepad2.right_stick_x;
@@ -156,19 +166,35 @@ public class CompetitionTeleop extends LinearOpMode {
 
             //if(gamepad2.a) intake();
             //if(gamepad2.y) transferToLift();
-            if(gamepad2.b) openClaw();//almost done
-            if(gamepad2.x) closeClaw();//almost done
-            if(gamepad2.right_bumper)  scoreLowHeight();
+
+
+
+
+            if(gamepad2.x) openLeftClaw();//almost done
+            if(gamepad2.a) openRightClaw();//almost done
+            if(gamepad2.y) openPlane();//almost done
+            if(gamepad2.b) closePlane();//almost done
+            if(gamepad2.left_bumper) closeLeftClaw();
+            if(gamepad2.right_bumper) closeRightClaw();
+            //if(gamepad2.right_bumper)  scoreLowHeight();
             if(gamepad2.touchpad) scoreMiddleHeight();
-            if(gamepad2.left_bumper)  scoreHighHeight();
+            //if(gamepad2.left_bumper)  scoreHighHeight();
             if(gamepad2.dpad_left) centerOnLeftAprilTag();//optional
             if(gamepad2.dpad_up) centerOnMiddleAprilTag();//optional
             if(gamepad2.dpad_right) centerOnRightAprilTag();//optional
             if(gamepad1.a) resetIMU();
+            if(gamepad2.ps){
+                openLeftClaw();
+                openRightClaw();
+            }
             //******
             //if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
 
-            finalArmJoint.setPower(gp2LeftStickY*1);
+            elevatorLeft.setPower(gamepad2.right_trigger-gamepad2.left_trigger);
+            elevatorRight.setPower(gamepad2.right_trigger-gamepad2.left_trigger);
+
+
+            finalArmJoint.setPower(gp2LeftStickY*-1);
             middleArmJoint.setPower(gp2RightStickY*1);
 
 
@@ -179,6 +205,44 @@ public class CompetitionTeleop extends LinearOpMode {
 
 
 
+    }
+    /*
+    private void changeLeftClaw(){
+        if(leftClawServo.getPosition()==LEFT_CLAW_OPENED){
+            closeLeftClaw();
+        }
+        else if(leftClawServo.getPosition()==LEFT_CLAW_CLOSED) {
+            openLeftClaw();
+        }
+        else{
+            return;
+        }
+    }
+    private void changeRightClaw(){
+        if(rightClawServo.getPosition()==RIGHT_CLAW_OPENED){
+            closeRightClaw();
+        }
+        else if(rightClawServo.getPosition()==RIGHT_CLAW_CLOSED) {
+            openRightClaw();
+        }
+        else{
+            return;
+        }
+    }
+
+     */
+
+    private void openLeftClaw(){
+        leftClawServo.setPosition(LEFT_CLAW_OPENED);
+    }
+    private void closeLeftClaw(){
+        leftClawServo.setPosition(LEFT_CLAW_CLOSED);
+    }
+    private void openRightClaw(){
+        rightClawServo.setPosition(RIGHT_CLAW_OPENED);
+    }
+    private void closeRightClaw(){
+        rightClawServo.setPosition(RIGHT_CLAW_CLOSED);
     }
 
 
@@ -248,7 +312,6 @@ public class CompetitionTeleop extends LinearOpMode {
     }
 
     private void transferToLift() {
-        closeClaw();
         orientMiddleArmForLiftTransaction();
         orientFinalJointForLiftTransaction();
 
@@ -262,7 +325,6 @@ public class CompetitionTeleop extends LinearOpMode {
         middleArmJoint.setPower(-0.7);//check if correct
     }
     private void intake() {
-        openClaw();
         //orientMiddleArmForIntake();
         //orientFinalJointForIntake();
 
@@ -279,14 +341,15 @@ public class CompetitionTeleop extends LinearOpMode {
 
     }
 
-    private void closeClaw() {
-        clawServo.setPosition(0);
+
+
+    private void closePlane() {
+        planeServo.setPosition(0);
     }
 
-    private void openClaw() {
-        clawServo.setPosition(1);
+    private void openPlane() {
+        planeServo.setPosition(1);
     }
-
 
     private void forward(double speed, double distance, double timeOut){
         distance *= DIST_NORM;
@@ -456,10 +519,10 @@ public class CompetitionTeleop extends LinearOpMode {
     private void runToPosition(double speed) {
 
         runtime.reset();
-        leftFront.setPower(Math.min(speed,driveMax));
-        rightFront.setPower(Math.min(speed,driveMax));
-        leftRear.setPower(Math.min(speed,driveMax));
-        rightRear.setPower(Math.min(speed,driveMax));
+        leftFront.setPower(Math.min(speed, DRIVE_MAX));
+        rightFront.setPower(Math.min(speed, DRIVE_MAX));
+        leftRear.setPower(Math.min(speed, DRIVE_MAX));
+        rightRear.setPower(Math.min(speed, DRIVE_MAX));
     }
     private void setDriveNewTargetPosition(double leftFrontCm, double rightFrontCm, double leftRearCm, double rightRearCm) {
 
@@ -524,8 +587,8 @@ public class CompetitionTeleop extends LinearOpMode {
         initRobotParameters();
         initMotors();
         initIMU();
-        closeClaw();
-
+        closeRightClaw();
+        closeLeftClaw();
     }
     private void initRobotParameters() {
         runtime = new ElapsedTime();
@@ -573,6 +636,8 @@ public class CompetitionTeleop extends LinearOpMode {
         setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
         middleArmJoint.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elevatorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elevatorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
     private void assignHardwareToMotors() {
         leftFront = hardwareMap.dcMotor.get("leftFront");
@@ -581,8 +646,12 @@ public class CompetitionTeleop extends LinearOpMode {
         rightRear = hardwareMap.dcMotor.get("rightRear");
         middleArmJoint = hardwareMap.get(DcMotor.class, "middleArmJoint");
         finalArmJoint = hardwareMap.get(CRServo.class,"finalArmJoint" );
-        clawServo = hardwareMap.get(Servo.class,"clawServo" );
+        leftClawServo = hardwareMap.get(Servo.class,"leftClawServo" );
+        rightClawServo = hardwareMap.get(Servo.class,"rightClawServo" );
+        planeServo = hardwareMap.get(Servo.class, "planeServo");
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
+        elevatorRight = hardwareMap.dcMotor.get("elevatorRight");
+        elevatorLeft = hardwareMap.dcMotor.get("elevatorLeft");
 
     }
     private void resetAllMotorsEncoders() {
@@ -593,6 +662,8 @@ public class CompetitionTeleop extends LinearOpMode {
         rightFront.setMode(runMode);
         leftRear.setMode(runMode);
         rightRear.setMode(runMode);
+        elevatorRight.setMode(runMode);
+        elevatorLeft.setMode(runMode);
     }
     private void initMotorsDirection() {
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -601,9 +672,12 @@ public class CompetitionTeleop extends LinearOpMode {
         rightRear.setDirection(DcMotor.Direction.REVERSE);
         middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
         finalArmJoint.setDirection(CRServo.Direction.FORWARD);
+        elevatorRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        elevatorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     private void turnOnRunToPosition() {
         setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
-    //*************************INITIALIZE*********************
+    //*************************INITIALIZE*************************
 }
+// ariel is dead
