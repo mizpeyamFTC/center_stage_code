@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -34,10 +35,7 @@ public class CompetitionTeleop extends LinearOpMode {
     private CRServo finalArmJoint;
 
     private Servo leftClawServo, rightClawServo;
-    private final int LEFT_CLAW_CLOSED = 0;
-    private final int LEFT_CLAW_OPENED = 1;
-    private final int RIGHT_CLAW_CLOSED = 1;
-    private final int RIGHT_CLAW_OPENED = 0;
+
     private boolean leftClawOpen = true;
     private boolean rightClawOpen = true;
     private Servo planeServo;
@@ -45,7 +43,7 @@ public class CompetitionTeleop extends LinearOpMode {
     private ColorSensor colorSensor;
     private IMU controlHubIMU;
 
-    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+
     private double DIST_NORM, SIDE_DIST_NORM, WHEEL_DIAMETER_CM, WHEEL_BASE_DISTANCE, FULL_ROUND;
     private double COUNTS_PER_CM;
 
@@ -54,11 +52,7 @@ public class CompetitionTeleop extends LinearOpMode {
 
     private double motorMax = 0.5;
 
-    private final double driveMax = 0.9;
-    private final double turnMax = 0.5;
 
-
-    private final long SHORT_SIDE_WAIT = 10000;
 
     private int newLeftFrontTarget;
     private int newRightFrontTarget;
@@ -90,6 +84,14 @@ public class CompetitionTeleop extends LinearOpMode {
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
     private final double P_TURN_GAIN= 0.02;     // Larger is more responsive, but also less stable
     private final int COLOR_THRESHOLD = 400; // blue
+    private final double DRIVE_MAX = 0.9;
+    private final double TURN_MAX = 0.5;
+    private final boolean MAIN_ROBOT = true; // false for ROBOT_B
+    private final int LEFT_CLAW_CLOSED = 0;
+    private final int LEFT_CLAW_OPENED = 1;
+    private final int RIGHT_CLAW_CLOSED = 1;
+    private final int RIGHT_CLAW_OPENED = 0;
+    private final long SHORT_SIDE_WAIT = 10000;
     AprilTagProcessor tagProcessor;
     VisionPortal visionPortal;
 
@@ -123,7 +125,7 @@ public class CompetitionTeleop extends LinearOpMode {
             x = gamepad1.left_stick_x;
             rx = gamepad1.right_stick_x;
 
-            motorMax = 0.5+gamepad1.right_trigger/10*5;
+            motorMax = 0.5+gamepad1.right_trigger*0.5;
 
             botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             telemetryAddIMUData();
@@ -181,6 +183,10 @@ public class CompetitionTeleop extends LinearOpMode {
             if(gamepad2.dpad_up) centerOnMiddleAprilTag();//optional
             if(gamepad2.dpad_right) centerOnRightAprilTag();//optional
             if(gamepad1.a) resetIMU();
+            if(gamepad2.ps){
+                openLeftClaw();
+                openRightClaw();
+            }
             //******
             //if(gamepad1.x) goToAprilTag(tagProcessor.getDetections().get(0));
 
@@ -513,10 +519,10 @@ public class CompetitionTeleop extends LinearOpMode {
     private void runToPosition(double speed) {
 
         runtime.reset();
-        leftFront.setPower(Math.min(speed,driveMax));
-        rightFront.setPower(Math.min(speed,driveMax));
-        leftRear.setPower(Math.min(speed,driveMax));
-        rightRear.setPower(Math.min(speed,driveMax));
+        leftFront.setPower(Math.min(speed, DRIVE_MAX));
+        rightFront.setPower(Math.min(speed, DRIVE_MAX));
+        leftRear.setPower(Math.min(speed, DRIVE_MAX));
+        rightRear.setPower(Math.min(speed, DRIVE_MAX));
     }
     private void setDriveNewTargetPosition(double leftFrontCm, double rightFrontCm, double leftRearCm, double rightRearCm) {
 
