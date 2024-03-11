@@ -279,6 +279,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
 
 
 
+
 //************************* - DIRECTIONAL DRIVE - *************************
     private void forward(double speed, double distance, double timeOut, boolean stopOnEnd){
         distance *= DIST_NORM;
