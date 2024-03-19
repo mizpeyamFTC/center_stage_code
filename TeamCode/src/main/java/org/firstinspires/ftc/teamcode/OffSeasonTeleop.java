@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,16 +12,15 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 public class OffSeasonTeleop  extends LinearOpMode {
 
     private DcMotor leftFront, leftRear, rightFront, rightRear;
-    private DcMotor liftL, liftR;
-    private DcMotor elevatorRight;
-    private DcMotor elevatorLeft;
-    private DcMotor middleArmJoint;
+    private DcMotor elevatorRight, elevatorLeft;
+    private DcMotor leftArmMotor, rightArmMotor;
     private CRServo finalArmJoint;
 
     private Servo leftClawServo, rightClawServo;
@@ -80,6 +80,23 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private final int RIGHT_CLAW_CLOSED = 1;
     private final int RIGHT_CLAW_OPENED = 0;
     private final long SHORT_SIDE_WAIT = 10000;
+
+    private int LEFT_ARM_HOME_POSITION;
+    private int RIGHT_ARM_HOME_POSITION;
+    private int LEFT_ARM_UP_POSITION;
+    private int RIGHT_ARM_UP_POSITION;
+    private int LEFT_ARM_SCORE_POSITION;
+    private int RIGHT_ARM_SCORE_POSITION;
+    private int LEFT_ARM_INTAKE_POSITION;
+    private int RIGHT_ARM_INTAKE_POSITION;
+    private int LEFT_HOME_TO_UP_OFFSET;
+    private int RIGHT_HOME_TO_UP_OFFSET;
+    private int LEFT_HOME_TO_SCORE_OFFSET;
+    private int RIGHT_HOME_TO_SCORE_OFFSET;
+    private int LEFT_HOME_TO_INTAKE_OFFSET;
+    private int RIGHT_HOME_TO_INTAKE_OFFSET;
+
+
     AprilTagProcessor tagProcessor;
     VisionPortal visionPortal;
 
@@ -89,10 +106,68 @@ public class OffSeasonTeleop  extends LinearOpMode {
 
         waitForStart();
 
-        while (opModeIsActive()){}
+        while (opModeIsActive()){
+            driveByInput();
+
+        }
+    }
+    private void driveByInput(){
+        double denominator, frontLeftPower, backLeftPower, frontRightPower, backRightPower;
+        double rotX, rotY;
+        double botHeading;
+        double gp2LeftStickY, gp2LeftStickX, gp2RightStickY, gp2RightStickX;
+        double y, x,rx;
+        double maxOutputPower;
+        gp2LeftStickY = gamepad2.left_stick_y;
+        gp2LeftStickX = gamepad2.left_stick_x;
+        gp2RightStickY = gamepad2.right_stick_y;
+        gp2RightStickX = gamepad2.right_stick_x;
+
+        y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+        x = gamepad1.left_stick_x;
+        rx = gamepad1.right_stick_x;
+
+        motorMax = 0.5+gamepad1.right_trigger*0.5;
+
+        botHeading = controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        telemetryAddIMUData();
+        // Rotate the movement direction counter to the bot's rotation
+        rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+        rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+        rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+        // Denominator is the largest motor power (absolute value) or 1
+        // This ensures all the powers maintain the same ratio,
+        // but only if at least one is out of the range [-1, 1]
+        denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        maxOutputPower = motorMax / denominator;
+        frontLeftPower =maxOutputPower* (rotY + rotX + rx);
+        backLeftPower = maxOutputPower*(rotY - rotX + rx);
+        frontRightPower = maxOutputPower*(rotY - rotX - rx);
+        backRightPower = maxOutputPower*(rotY + rotX - rx);
+
+        powerDriveMotors(frontLeftPower, backLeftPower, frontRightPower, backRightPower);
+
+    }
+
+
+    private void powerDriveMotors(double frontLeftPower, double backLeftPower, double frontRightPower, double backRightPower) {
+        leftFront.setPower(frontLeftPower);
+        leftRear.setPower(backLeftPower);
+        rightFront.setPower(frontRightPower);
+        rightRear.setPower(backRightPower);
+    }
+
+    private void telemetryAddIMUData() {
+        telemetry.addData("yaw:", controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) );
+        telemetry.addData("pitch:", controlHubIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES) );
+        telemetry.addData("roll:", controlHubIMU.getRobotYawPitchRollAngles().getRoll(AngleUnit.DEGREES) );
+        telemetry.update();
     }
     private void positionToIntake(){}
-    private void positionToScore(){}
+    private void positionToScore(){
+
+    }
     private void positionToRest(){}
     private void openLeftClaw(){
         leftClawServo.setPosition(LEFT_CLAW_OPENED);
@@ -118,6 +193,10 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private void initRobotParameters() {
         runtime = new ElapsedTime();
         matchRuntime = new ElapsedTime();
+        initDriveConstants();
+    }
+
+    private void initDriveConstants() {
         boolean bLedOn = true;
         distanceSensor = hardwareMap.get(DistanceSensor.class, "ds-1");
         colorSensor = hardwareMap.get(ColorSensor.class, "cs-1");
@@ -139,6 +218,20 @@ public class OffSeasonTeleop  extends LinearOpMode {
                 (WHEEL_DIAMETER_CM * 3.1415);
         FULL_ROUND = COUNTS_PER_MOTOR_REV*DRIVE_GEAR_REDUCTION*(WHEEL_BASE_DISTANCE/WHEEL_DIAMETER_CM)*1.65;
     }
+    private void initArmConstants(){
+        LEFT_ARM_HOME_POSITION = leftArmMotor.getCurrentPosition();
+        RIGHT_ARM_HOME_POSITION = rightArmMotor.getCurrentPosition();
+
+        LEFT_ARM_UP_POSITION = LEFT_ARM_HOME_POSITION + LEFT_HOME_TO_UP_OFFSET;
+        RIGHT_ARM_UP_POSITION = RIGHT_ARM_HOME_POSITION + RIGHT_HOME_TO_UP_OFFSET;
+
+        LEFT_ARM_SCORE_POSITION = LEFT_ARM_HOME_POSITION + LEFT_HOME_TO_SCORE_OFFSET;
+        RIGHT_ARM_SCORE_POSITION = RIGHT_ARM_HOME_POSITION + RIGHT_HOME_TO_SCORE_OFFSET;
+
+        LEFT_ARM_INTAKE_POSITION = LEFT_ARM_HOME_POSITION + LEFT_HOME_TO_INTAKE_OFFSET;
+        RIGHT_ARM_INTAKE_POSITION = RIGHT_ARM_HOME_POSITION + RIGHT_HOME_TO_INTAKE_OFFSET;
+    }
+
     private void initIMU() {
         // Retrieve the IMU from the hardware map
         controlHubIMU = hardwareMap.get(IMU.class, "imu");
@@ -159,8 +252,10 @@ public class OffSeasonTeleop  extends LinearOpMode {
         initMotorsDirection();
         resetAllMotorsEncoders();
         setAllMotorsMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        middleArmJoint.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        middleArmJoint.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftArmMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftArmMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elevatorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elevatorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
@@ -169,7 +264,8 @@ public class OffSeasonTeleop  extends LinearOpMode {
         rightFront = hardwareMap.dcMotor.get("rightFront");
         leftRear = hardwareMap.dcMotor.get("leftRear");
         rightRear = hardwareMap.dcMotor.get("rightRear");
-        middleArmJoint = hardwareMap.get(DcMotor.class, "middleArmJoint");
+        leftArmMotor = hardwareMap.get(DcMotor.class, "leftArmMotor");
+        rightArmMotor = hardwareMap.get(DcMotor.class, "RightArmMotor");
         finalArmJoint = hardwareMap.get(CRServo.class,"finalArmJoint" );
         leftClawServo = hardwareMap.get(Servo.class,"leftClawServo" );
         rightClawServo = hardwareMap.get(Servo.class,"rightClawServo" );
@@ -195,7 +291,8 @@ public class OffSeasonTeleop  extends LinearOpMode {
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
-        middleArmJoint.setDirection(DcMotor.Direction.REVERSE);
+        leftArmMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightArmMotor.setDirection(DcMotor.Direction.FORWARD);
         finalArmJoint.setDirection(CRServo.Direction.FORWARD);
         elevatorRight.setDirection(DcMotorSimple.Direction.FORWARD);
         elevatorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -203,5 +300,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private void turnOnRunToPosition() {
         setAllMotorsMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
+
+
     //*************************INITIALIZE*************************
 }
