@@ -680,4 +680,4 @@ public class CompetitionTeleop extends LinearOpMode {
     }
     //*************************INITIALIZE*************************
 }
-// ariel is dead
+
