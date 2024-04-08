@@ -80,8 +80,6 @@ public class CompetitionAutonomous extends LinearOpMode  {
     @Override
     public void runOpMode() throws InterruptedException {
         initializeRobot();
-
-
         closeClaws();
         waitForStart();
         runAutonomous();
