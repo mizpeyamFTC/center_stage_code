@@ -21,16 +21,27 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp(name = "OffSeasonTeleop")
 public class OffSeasonTeleop  extends LinearOpMode {
 
-    private DcMotor leftFront, leftRear, rightFront, rightRear;
-    private DcMotor elevatorRight, elevatorLeft;
-    private DcMotor leftArmMotor, rightArmMotor;
-    private Servo finalArmJoint;
+    private DcMotor
+            leftFront,
+            leftRear,
+            rightFront,
+            rightRear,
+            elevatorRight,
+            elevatorLeft,
+            leftArmMotor,
+            rightArmMotor;
 
-    private Servo leftClawServo, rightClawServo;
+    private Servo
+            finalArmJoint,
+            leftClawServo,
+            rightClawServo,
+            planeServo;
+
+
 
     private boolean leftClawOpen = true;
     private boolean rightClawOpen = true;
-    private Servo planeServo;
+
     private DistanceSensor distanceSensor;
     private ColorSensor colorSensor;
     private IMU controlHubIMU;
@@ -49,8 +60,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private double targetHeading = 0;
     private double headingError = 0;
     private double turnSpeed = 0.6;
-    private int intakeMotorPositionCount;
-    private int middleArmJointHomePosition;
+
 
     private final double CORE_HEX_COUNTS_PER_REVOLUTION = 288;
     private final double CORE_HEX_DEGREES_PER_COUNT = 360 / CORE_HEX_COUNTS_PER_REVOLUTION;
@@ -74,10 +84,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private final double DRIVE_MAX = 0.9;
     private final double TURN_MAX = 0.5;
     private final boolean MAIN_ROBOT = true; // false for ROBOT_B
-    private final double LEFT_CLAW_CLOSED = 0;
-    private final double LEFT_CLAW_OPENED = 1;
-    private final double RIGHT_CLAW_CLOSED = 1;
-    private final double RIGHT_CLAW_OPENED = 0;
+
     private final long SHORT_SIDE_WAIT = 10000;
 
     private int LEFT_ARM_HOME_POSITION;
@@ -92,22 +99,31 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private int RIGHT_HOME_TO_UP_OFFSET = 60;
     private int LEFT_HOME_TO_SCORE_OFFSET = 130;
     private int RIGHT_HOME_TO_SCORE_OFFSET = 130;
-    private int LEFT_HOME_TO_INTAKE_OFFSET = 195;
-    private int RIGHT_HOME_TO_INTAKE_OFFSET = 195;
+    //private int LEFT_HOME_TO_INTAKE_OFFSET = 195;
+    //private int RIGHT_HOME_TO_INTAKE_OFFSET = 195;
+    private int LEFT_HOME_TO_INTAKE_OFFSET = 192;
+    private int RIGHT_HOME_TO_INTAKE_OFFSET = 192;
+
 
 
     AprilTagProcessor tagProcessor;
     VisionPortal visionPortal;
-    Thread clawDistanceSensorThread;
 
-    private boolean breaking = false;
 
-    private final double INTAKE_TO_SCORE_SPEED = 0.8;
-    private final double SCORE_TO_INTAKE_SPEED = 0.4;
-    private final double SCORE_TO_UP_SPEED = 0.7;
-    private final double UP_TO_SCORE_SPEED = 0.4;
-    private final double UP_TO_HOME_SPEED = 0.4;
     private final double HOME_TO_UP_SPEED = 0.7;
+    private final double UP_TO_HOME_SPEED = 0.4;
+    private final double UP_TO_SCORE_SPEED = 0.4;
+    private final double SCORE_TO_UP_SPEED = 0.7;
+    private final double SCORE_TO_INTAKE_SPEED = 0.4;
+    private final double INTAKE_TO_SCORE_SPEED = 0.8;
+
+    private final double WRIST_INTAKE_POSITION = 0.55;
+    //private final int LIFT_INTAKE_POSITION =-340;
+    private final int LIFT_INTAKE_POSITION =-300;
+    private final double LEFT_CLAW_CLOSED = 0;
+    private final double LEFT_CLAW_OPENED = 1;
+    private final double RIGHT_CLAW_CLOSED = 1;
+    private final double RIGHT_CLAW_OPENED = 0;
     enum Position{
         home,
         up,
@@ -116,6 +132,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
     }
 
     Position currentPosition = Position.home;
+    Thread clawDistanceSensorThread;
     Thread positionThread;
     Thread updateClawsStateThread;
     Thread updateTelemetryThread;
@@ -123,10 +140,9 @@ public class OffSeasonTeleop  extends LinearOpMode {
     Thread driveThread;
 
     Thread armControlThread;
-
     Thread elevatorMotorsModeThread;
-
     Thread robotControl;
+    Thread updateLiftLockThread;
 
 
     /*TODO: create thread for claw angle*/
@@ -134,12 +150,15 @@ public class OffSeasonTeleop  extends LinearOpMode {
     /*TODO: create method to make open/close buttons for the claws */
 
     //*************************THREADS*************************
+    // a synchronized method is a method that can work and lock to the hardware in a synchronized matter with other methods that try to lock in in parallel
+    // because only 1 source can read/write data on to the hardware device thus locking access to it
+    // we use synchronization to regulate and order the approach manner of the different sources so that the access wont be chaotic but organized(synchronized)
 
-    private synchronized void updateCurrentPosition(){
+    private synchronized void updateCurrentArmPosition(){
         int rightArmPosition = rightArmMotor.getCurrentPosition();
         if(rightArmPosition<=RIGHT_ARM_UP_POSITION/2){
             currentPosition = Position.home;
-            return;
+
         }
         else if (RIGHT_ARM_UP_POSITION/2<rightArmPosition
                 &&rightArmPosition<=RIGHT_ARM_UP_POSITION+(RIGHT_ARM_SCORE_POSITION-RIGHT_ARM_UP_POSITION)/2) {
@@ -178,13 +197,26 @@ public class OffSeasonTeleop  extends LinearOpMode {
         double elevatorPower;
 
         if(gamepad2.left_bumper){
-            if (leftClawOpen) closeLeftClaw();
-            else openLeftClaw();
+            //if (leftClawOpen) closeLeftClaw();
+            //else openLeftClaw();
+            closeLeftClaw();
         }
         if(gamepad2.right_bumper){
-            if (rightClawOpen) closeRightClaw();
-            else openRightClaw();//almost done
+            //if (rightClawOpen) closeRightClaw();
+            //else openRightClaw();//almost done
+            closeRightClaw();
         }
+        if(gamepad2.a){
+            //if (leftClawOpen) closeLeftClaw();
+            //else openLeftClaw();
+            openRightClaw();
+        }
+        if(gamepad2.x){
+            //if (rightClawOpen) closeRightClaw();
+            //else openRightClaw();//almost done
+            openLeftClaw();
+        }
+
         if(gamepad1.a) resetIMU();
         if(gamepad2.ps){ openLeftClaw(); openRightClaw();}
         if(gamepad2.dpad_down) requestMoveToIntake();
@@ -281,6 +313,8 @@ public class OffSeasonTeleop  extends LinearOpMode {
 
     }
 
+
+
     private void updateTelemetry(){
         updateLiftTelemetry();
         updateArmTelemetry();
@@ -297,12 +331,78 @@ public class OffSeasonTeleop  extends LinearOpMode {
         waitForStart();
 
 
+        // a thread is a virtual processor that allows independent and parallel execution of code
+
+        /*clawDistanceSensorThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(opModeIsActive()&&!isStopRequested()){
+                    try {
+                        closeClawsOnPixelDetection();
+
+                    } catch (Exception e){
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        });
+
+         */
+       /* moveElevatorThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(opModeIsActive()&&!isStopRequested()){
+                    try {
+                        elevatorToIntake();
+
+
+                    } catch (Exception e){
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        });
+       */
+        /*driveThread = new Thread(new Runnable() {
+            @Override
+            synchronized public void run() {
+                while(opModeIsActive()&&!isStopRequested()){
+                    try {
+                        driveByInput();
+
+                    } catch (Exception e){
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        });
+
+         */
+        /*armControlThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(opModeIsActive()&&!isStopRequested()){
+                    try {
+                        armControl();
+
+                    } catch (Exception e){
+                        e.printStackTrace();
+
+                    }
+                }
+            }
+        });
+
+         */
         positionThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(opModeIsActive()&&!isStopRequested()){
                     try {
-                        updateCurrentPosition();
+                        updateCurrentArmPosition();
 
                     } catch (Exception e){
                         e.printStackTrace();
@@ -324,71 +424,12 @@ public class OffSeasonTeleop  extends LinearOpMode {
                 }
             }
         });
-        clawDistanceSensorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(opModeIsActive()&&!isStopRequested()){
-                    try {
-                        closeClawsOnPixelDetection();
-
-                    } catch (Exception e){
-                        e.printStackTrace();
-
-                    }
-                }
-            }
-        });
         updateTelemetryThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(opModeIsActive()&&!isStopRequested()){
                     try {
                         updateTelemetry();
-
-                    } catch (Exception e){
-                        e.printStackTrace();
-
-                    }
-                }
-            }
-        });
-        moveElevatorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(opModeIsActive()&&!isStopRequested()){
-                    try {
-                        elevatorToIntake();
-
-
-                    } catch (Exception e){
-                        e.printStackTrace();
-
-                    }
-                }
-            }
-        });
-        /*driveThread = new Thread(new Runnable() {
-            @Override
-            synchronized public void run() {
-                while(opModeIsActive()&&!isStopRequested()){
-                    try {
-                        driveByInput();
-
-                    } catch (Exception e){
-                        e.printStackTrace();
-
-                    }
-                }
-            }
-        });
-
-         */
-        armControlThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(opModeIsActive()&&!isStopRequested()){
-                    try {
-                        armControl();
 
                     } catch (Exception e){
                         e.printStackTrace();
@@ -411,6 +452,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
                 }
             }
         });
+
         robotControl = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -618,15 +660,16 @@ public class OffSeasonTeleop  extends LinearOpMode {
     }
 
     private synchronized void elevatorToIntake(){
-        elevatorLeft.setTargetPosition(-340);
-        elevatorRight.setTargetPosition(-340);
+        elevatorLeft.setTargetPosition(LIFT_INTAKE_POSITION);
+        elevatorRight.setTargetPosition(LIFT_INTAKE_POSITION);
         elevatorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elevatorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elevatorLeft.setPower(1);
         elevatorRight.setPower(1);
 
 
-    }private synchronized void elevatorToHome(){
+    }
+    private synchronized void elevatorToHome(){
         elevatorLeft.setTargetPosition(-10);
         elevatorRight.setTargetPosition(-10);
         elevatorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -636,32 +679,21 @@ public class OffSeasonTeleop  extends LinearOpMode {
 
 
     }
-    synchronized private void moveElevatorToPosition(int targetPosition){
-        elevatorLeft.setTargetPosition(-700);
-        elevatorRight.setTargetPosition(-700);
-        while(elevatorRight.getCurrentPosition()!=elevatorRight.getTargetPosition()){
-            elevatorLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            elevatorRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            elevatorLeft.setPower(1);
-            elevatorRight.setPower(1);
-        }
-        elevatorLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        elevatorRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
 
 
-    synchronized private void requestMoveToHome(){
+
+    private synchronized void requestMoveToHome(){
         elevatorToHome();
         moveArmToSetPosition(currentPosition, Position.home);
     }
-    synchronized private  void requestMoveToUp(){
+    private synchronized void requestMoveToUp(){
 
         moveArmToSetPosition(currentPosition, Position.up);
     }
-    synchronized private void requestMoveToScore(){
+    private synchronized void requestMoveToScore(){
         moveArmToSetPosition(currentPosition, Position.score);
     }
-    synchronized private void requestMoveToIntake(){
+     private synchronized void requestMoveToIntake(){
         //elevator to -300
         elevatorToIntake();
         moveArmToSetPosition(currentPosition, Position.intake);
@@ -681,12 +713,12 @@ public class OffSeasonTeleop  extends LinearOpMode {
         moveArmToTargetPosition(LEFT_ARM_SCORE_POSITION, LEFT_ARM_SCORE_POSITION, power);
     }
     private synchronized void moveArmToIntake(double power){
-        finalArmJoint.setPosition(0.5);
+        finalArmJoint.setPosition(WRIST_INTAKE_POSITION);
         moveArmToTargetPosition(LEFT_ARM_INTAKE_POSITION, RIGHT_ARM_INTAKE_POSITION, power);
     }
 
 
-     private synchronized void driveByInput(){
+    private synchronized void driveByInput(){
         double denominator, frontLeftPower, backLeftPower, frontRightPower, backRightPower;
         double rotX, rotY;
         double y, x,rx;
@@ -732,20 +764,20 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private void positionToScore(){
     }
     private void positionToRest(){}
-    private  void openLeftClaw(){ leftClawServo.setPosition(LEFT_CLAW_OPENED);}
-    private  void closeLeftClaw(){ leftClawServo.setPosition(LEFT_CLAW_CLOSED);}
-    private  void openRightClaw(){ rightClawServo.setPosition(RIGHT_CLAW_OPENED);}
-    private  void closeRightClaw(){ rightClawServo.setPosition(RIGHT_CLAW_CLOSED);}
+    private synchronized void openLeftClaw(){ leftClawServo.setPosition(LEFT_CLAW_OPENED);}
+    private synchronized void closeLeftClaw(){ leftClawServo.setPosition(LEFT_CLAW_CLOSED);}
+    private synchronized void openRightClaw(){ rightClawServo.setPosition(RIGHT_CLAW_OPENED);}
+    private synchronized void closeRightClaw(){ rightClawServo.setPosition(RIGHT_CLAW_CLOSED);}
 
 
 
-    private  void updateLiftTelemetry(){
+    private synchronized void updateLiftTelemetry(){
         telemetry.addLine("left lift motor: " + elevatorLeft.getCurrentPosition());
         telemetry.addLine("right lift motor: " + elevatorRight.getCurrentPosition());
         telemetry.addLine("left lift state: " + elevatorLeft.getMode().toString());
         telemetry.addLine("right lift state: " + elevatorRight.getMode().toString());
     }
-    private  void updateArmTelemetry()
+    private synchronized void updateArmTelemetry()
     {
         telemetry.addData("current position: ",  currentPosition.toString());
         telemetry.addLine("left motor pos:" + leftArmMotor.getCurrentPosition());
@@ -759,7 +791,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
 
 
     }
-    private  void telemetryAddIMUData() {
+    private synchronized void telemetryAddIMUData() {
         telemetry.addData("yaw:", controlHubIMU.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) );
         telemetry.addData("pitch:", controlHubIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES) );
         telemetry.addData("roll:", controlHubIMU.getRobotYawPitchRollAngles().getRoll(AngleUnit.DEGREES) );
@@ -771,10 +803,11 @@ public class OffSeasonTeleop  extends LinearOpMode {
     private void initializeRobot() {
         //initCamera();
         initMotors();
-        initRobotParameters();
-        initIMU();
         closeRightClaw();
         closeLeftClaw();
+        initRobotParameters();
+        initIMU();
+
     }
     private void initRobotParameters() {
         runtime = new ElapsedTime();
@@ -845,6 +878,10 @@ public class OffSeasonTeleop  extends LinearOpMode {
         leftArmMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elevatorLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elevatorRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
     private void assignHardware() {
 
