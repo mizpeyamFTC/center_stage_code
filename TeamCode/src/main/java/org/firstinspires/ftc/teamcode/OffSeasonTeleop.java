@@ -154,8 +154,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
     // because only 1 source can read/write data on to the hardware device thus locking access to it
     // we use synchronization to regulate and order the approach manner of the different sources so that the access wont be chaotic but organized(synchronized)
 
-    private synchronized void updateCurrentArmPosition(){
-        int rightArmPosition = rightArmMotor.getCurrentPosition();
+    private synchronized void updateCurrentArmPosition(int rightArmPosition){
         if(rightArmPosition<=RIGHT_ARM_UP_POSITION/2){
             currentPosition = Position.home;
 
@@ -174,6 +173,10 @@ public class OffSeasonTeleop  extends LinearOpMode {
             currentPosition = Position.intake;
         }
     }
+    private int getCurrentArmPosition(){
+        return rightArmMotor.getCurrentPosition();
+
+    }
     private synchronized void closeClawsOnPixelDetection(){
         if(leftClawSensor.getDistance(DistanceUnit.CM)<5) closeLeftClaw();
         if(rightClawSensor.getDistance(DistanceUnit.CM)<5) closeRightClaw();
@@ -181,8 +184,8 @@ public class OffSeasonTeleop  extends LinearOpMode {
     }
     private synchronized void changeElevatorMotorsModeOnChange(){
         if(gamepad2.left_trigger>0.02||gamepad2.right_trigger>0.02){
-            elevatorLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            elevatorRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            elevatorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            elevatorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
        /*
         if(gamepad2.right_stick_y>0.02 || gamepad2.right_stick_y<-0.02){
@@ -402,7 +405,8 @@ public class OffSeasonTeleop  extends LinearOpMode {
             public void run() {
                 while(opModeIsActive()&&!isStopRequested()){
                     try {
-                        updateCurrentArmPosition();
+
+                        updateCurrentArmPosition(getCurrentArmPosition());
 
                     } catch (Exception e){
                         e.printStackTrace();
@@ -482,7 +486,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
         positionThread.start();
         updateClawsStateThread.start();
         updateTelemetryThread.start();
-        elevatorMotorsModeThread.start();
+        //elevatorMotorsModeThread.start();
         robotControl.start();
 
 
