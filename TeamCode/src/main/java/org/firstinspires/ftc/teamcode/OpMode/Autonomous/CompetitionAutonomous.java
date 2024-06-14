@@ -571,7 +571,7 @@ public class CompetitionAutonomous extends LinearOpMode  {
         rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
     //*************************INITIALIZE*************************
-    //ariel is dead
+
 
 
 
