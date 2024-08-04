@@ -446,6 +446,7 @@ public class CompetitionTeleop extends LinearOpMode {
                 (runtime.seconds() < timeoutS) &&
                 (matchRuntime.seconds() < 30000) &&
                 (distanceSensor.getDistance(DistanceUnit.CM) > distance))) {
+
             // Display it for the driver.
             telemetry.addData("Running to",  " %7d :%7d :%7d :%7d", newLeftFrontTarget,  newRightFrontTarget, newLeftRearTarget, newRightRearTarget);
             telemetry.addData("Currently at",  " at %7d :%7d :%7d :%7d",

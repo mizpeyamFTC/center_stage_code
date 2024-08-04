@@ -239,6 +239,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
         rightArmPower = gp2RightStickY*0.5;
         leftArmPower = gp2RightStickY*0.5;
 
+
         if(leftArmMotor.getMode()== DcMotor.RunMode.RUN_TO_POSITION && (leftArmPower>0.05 ||leftArmPower<-0.05)){
             leftArmMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightArmMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -299,6 +300,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
         if(RIGHT_CLAW_OPENED>RIGHT_CLAW_CLOSED){
             if(rightClawServo.getPosition()>(Math.abs(RIGHT_CLAW_OPENED-RIGHT_CLAW_CLOSED)/2)){
                 rightClawOpen = true;
+
             }
             else{
                 rightClawOpen = false;
@@ -507,7 +509,7 @@ public class OffSeasonTeleop  extends LinearOpMode {
                 robotControl.stop();
             }
 
-            finalArmJoint.setPower(gamepad2.left_stick_y*-1);
+            finalArmJoint.setPower(gamepad2.left_stick_y*-0.5);
 
 
             //driveByInput();

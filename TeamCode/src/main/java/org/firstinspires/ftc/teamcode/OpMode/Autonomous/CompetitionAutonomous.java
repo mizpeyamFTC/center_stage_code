@@ -395,7 +395,8 @@ public class CompetitionAutonomous extends LinearOpMode  {
         }
         stopAllMotion();
     }
-    //************************* - SUPERVISED DRIVE - *************************
+    //********
+    // ***************** - SUPERVISED DRIVE - *************************
 
 
 
